@@ -145,7 +145,7 @@
     },
     "visuals": {
       "file": "visuals.bin.gz",
-      "byteLength": 2518500,
+      "byteLength": 9434064,
       "meshes": [
         {
           "body": 14,
@@ -156,9 +156,9 @@
             0.6514056921005249
           ],
           "vertexOffset": 0,
-          "vertexCount": 802,
-          "indexOffset": 9624,
-          "indexCount": 4800
+          "vertexCount": 7896,
+          "indexOffset": 94752,
+          "indexCount": 47364
         },
         {
           "body": 14,
@@ -168,10 +168,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 19224,
-          "vertexCount": 2348,
-          "indexOffset": 47400,
-          "indexCount": 14208
+          "vertexOffset": 189480,
+          "vertexCount": 9939,
+          "indexOffset": 308748,
+          "indexCount": 59766
         },
         {
           "body": 14,
@@ -181,10 +181,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 75816,
-          "vertexCount": 766,
-          "indexOffset": 85008,
-          "indexCount": 4800
+          "vertexOffset": 428280,
+          "vertexCount": 10441,
+          "indexOffset": 553572,
+          "indexCount": 62910
         },
         {
           "body": 14,
@@ -194,10 +194,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 94608,
-          "vertexCount": 788,
-          "indexOffset": 104064,
-          "indexCount": 4800
+          "vertexOffset": 679392,
+          "vertexCount": 2477,
+          "indexOffset": 709116,
+          "indexCount": 14934
         },
         {
           "body": 13,
@@ -207,10 +207,10 @@
             0.7083767652511597,
             0.7835373878479004
           ],
-          "vertexOffset": 113664,
-          "vertexCount": 2000,
-          "indexOffset": 137664,
-          "indexCount": 12084
+          "vertexOffset": 738984,
+          "vertexCount": 7374,
+          "indexOffset": 827472,
+          "indexCount": 44328
         },
         {
           "body": 13,
@@ -220,9 +220,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 161832,
+          "vertexOffset": 916128,
           "vertexCount": 1950,
-          "indexOffset": 185232,
+          "indexOffset": 939528,
           "indexCount": 11736
         },
         {
@@ -233,10 +233,10 @@
             0.7230557203292847,
             0.7230557203292847
           ],
-          "vertexOffset": 208704,
-          "vertexCount": 2488,
-          "indexOffset": 238560,
-          "indexCount": 14940
+          "vertexOffset": 963000,
+          "vertexCount": 6123,
+          "indexOffset": 1036476,
+          "indexCount": 36750
         },
         {
           "body": 12,
@@ -246,9 +246,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 268440,
+          "vertexOffset": 1109976,
           "vertexCount": 1950,
-          "indexOffset": 291840,
+          "indexOffset": 1133376,
           "indexCount": 11736
         },
         {
@@ -259,10 +259,10 @@
             0.7011021375656128,
             0.6514056921005249
           ],
-          "vertexOffset": 315312,
-          "vertexCount": 784,
-          "indexOffset": 324720,
-          "indexCount": 4800
+          "vertexOffset": 1156848,
+          "vertexCount": 1784,
+          "indexOffset": 1178256,
+          "indexCount": 10800
         },
         {
           "body": 12,
@@ -272,10 +272,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 334320,
-          "vertexCount": 769,
-          "indexOffset": 343548,
-          "indexCount": 4800
+          "vertexOffset": 1199856,
+          "vertexCount": 10441,
+          "indexOffset": 1325148,
+          "indexCount": 62910
         },
         {
           "body": 12,
@@ -285,9 +285,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 353148,
+          "vertexOffset": 1450968,
           "vertexCount": 1950,
-          "indexOffset": 376548,
+          "indexOffset": 1474368,
           "indexCount": 11736
         },
         {
@@ -298,10 +298,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 400020,
-          "vertexCount": 769,
-          "indexOffset": 409248,
-          "indexCount": 4800
+          "vertexOffset": 1497840,
+          "vertexCount": 10441,
+          "indexOffset": 1623132,
+          "indexCount": 62910
         },
         {
           "body": 11,
@@ -311,10 +311,10 @@
             0.7912985682487488,
             0.7912985682487488
           ],
-          "vertexOffset": 418848,
-          "vertexCount": 2399,
-          "indexOffset": 447636,
-          "indexCount": 14472
+          "vertexOffset": 1748952,
+          "vertexCount": 10471,
+          "indexOffset": 1874604,
+          "indexCount": 62910
         },
         {
           "body": 10,
@@ -324,10 +324,10 @@
             0.37626245617866516,
             0.37626245617866516
           ],
-          "vertexOffset": 476580,
-          "vertexCount": 1288,
-          "indexOffset": 492036,
-          "indexCount": 7800
+          "vertexOffset": 2000424,
+          "vertexCount": 6186,
+          "indexOffset": 2074656,
+          "indexCount": 37212
         },
         {
           "body": 10,
@@ -337,9 +337,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 507636,
+          "vertexOffset": 2149080,
           "vertexCount": 1950,
-          "indexOffset": 531036,
+          "indexOffset": 2172480,
           "indexCount": 11736
         },
         {
@@ -350,10 +350,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 554508,
-          "vertexCount": 769,
-          "indexOffset": 563736,
-          "indexCount": 4800
+          "vertexOffset": 2195952,
+          "vertexCount": 10441,
+          "indexOffset": 2321244,
+          "indexCount": 62910
         },
         {
           "body": 10,
@@ -363,10 +363,10 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 573336,
-          "vertexCount": 792,
-          "indexOffset": 582840,
-          "indexCount": 4800
+          "vertexOffset": 2447064,
+          "vertexCount": 1202,
+          "indexOffset": 2461488,
+          "indexCount": 7260
         },
         {
           "body": 9,
@@ -376,9 +376,9 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 592440,
+          "vertexOffset": 2476008,
           "vertexCount": 802,
-          "indexOffset": 602064,
+          "indexOffset": 2485632,
           "indexCount": 4800
         },
         {
@@ -389,10 +389,10 @@
             0.116970956325531,
             0.13286833465099335
           ],
-          "vertexOffset": 611664,
-          "vertexCount": 2894,
-          "indexOffset": 646392,
-          "indexCount": 17382
+          "vertexOffset": 2495232,
+          "vertexCount": 5698,
+          "indexOffset": 2563608,
+          "indexCount": 34236
         },
         {
           "body": 9,
@@ -402,9 +402,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 681156,
+          "vertexOffset": 2632080,
           "vertexCount": 1950,
-          "indexOffset": 704556,
+          "indexOffset": 2655480,
           "indexCount": 11736
         },
         {
@@ -415,10 +415,10 @@
             0.5332767963409424,
             0.7230557203292847
           ],
-          "vertexOffset": 728028,
-          "vertexCount": 999,
-          "indexOffset": 740016,
-          "indexCount": 5982
+          "vertexOffset": 2678952,
+          "vertexCount": 3365,
+          "indexOffset": 2719332,
+          "indexCount": 20178
         },
         {
           "body": 9,
@@ -428,10 +428,10 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 751980,
-          "vertexCount": 792,
-          "indexOffset": 761484,
-          "indexCount": 4800
+          "vertexOffset": 2759688,
+          "vertexCount": 1800,
+          "indexOffset": 2781288,
+          "indexCount": 10848
         },
         {
           "body": 9,
@@ -441,10 +441,10 @@
             0.7912985682487488,
             0.7912985682487488
           ],
-          "vertexOffset": 771084,
-          "vertexCount": 1550,
-          "indexOffset": 789684,
-          "indexCount": 9288
+          "vertexOffset": 2802984,
+          "vertexCount": 8062,
+          "indexOffset": 2899728,
+          "indexCount": 48360
         },
         {
           "body": 9,
@@ -454,9 +454,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 808260,
+          "vertexOffset": 2996448,
           "vertexCount": 1950,
-          "indexOffset": 831660,
+          "indexOffset": 3019848,
           "indexCount": 11736
         },
         {
@@ -467,10 +467,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 855132,
-          "vertexCount": 766,
-          "indexOffset": 864324,
-          "indexCount": 4800
+          "vertexOffset": 3043320,
+          "vertexCount": 10441,
+          "indexOffset": 3168612,
+          "indexCount": 62910
         },
         {
           "body": 9,
@@ -480,10 +480,10 @@
             0.20155668258666992,
             0.14126352965831757
           ],
-          "vertexOffset": 873924,
-          "vertexCount": 692,
-          "indexOffset": 882228,
-          "indexCount": 4800
+          "vertexOffset": 3294432,
+          "vertexCount": 9308,
+          "indexOffset": 3406128,
+          "indexCount": 56568
         },
         {
           "body": 9,
@@ -493,9 +493,9 @@
             0.5332767963409424,
             0.7230557203292847
           ],
-          "vertexOffset": 891828,
+          "vertexOffset": 3519264,
           "vertexCount": 1003,
-          "indexOffset": 903864,
+          "indexOffset": 3531300,
           "indexCount": 6006
         },
         {
@@ -506,9 +506,9 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 915876,
+          "vertexOffset": 3543312,
           "vertexCount": 492,
-          "indexOffset": 921780,
+          "indexOffset": 3549216,
           "indexCount": 2952
         },
         {
@@ -519,10 +519,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 927684,
-          "vertexCount": 2234,
-          "indexOffset": 954492,
-          "indexCount": 13464
+          "vertexOffset": 3555120,
+          "vertexCount": 4949,
+          "indexOffset": 3614508,
+          "indexCount": 29754
         },
         {
           "body": 9,
@@ -532,10 +532,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 981420,
-          "vertexCount": 2046,
-          "indexOffset": 1005972,
-          "indexCount": 12300
+          "vertexOffset": 3674016,
+          "vertexCount": 10477,
+          "indexOffset": 3799740,
+          "indexCount": 62910
         },
         {
           "body": 9,
@@ -545,10 +545,10 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 1030572,
-          "vertexCount": 2566,
-          "indexOffset": 1061364,
-          "indexCount": 15414
+          "vertexOffset": 3925560,
+          "vertexCount": 5490,
+          "indexOffset": 3991440,
+          "indexCount": 32976
         },
         {
           "body": 9,
@@ -558,10 +558,10 @@
             0.2122306078672409,
             0.2122306078672409
           ],
-          "vertexOffset": 1092192,
-          "vertexCount": 736,
-          "indexOffset": 1101024,
-          "indexCount": 4800
+          "vertexOffset": 4057392,
+          "vertexCount": 10399,
+          "indexOffset": 4182180,
+          "indexCount": 62910
         },
         {
           "body": 9,
@@ -571,9 +571,9 @@
             0.06847813725471497,
             0.06847813725471497
           ],
-          "vertexOffset": 1110624,
+          "vertexOffset": 4308000,
           "vertexCount": 8,
-          "indexOffset": 1110720,
+          "indexOffset": 4308096,
           "indexCount": 36
         },
         {
@@ -584,10 +584,10 @@
             0.7605254650115967,
             0.8962691426277161
           ],
-          "vertexOffset": 1110792,
-          "vertexCount": 852,
-          "indexOffset": 1121016,
-          "indexCount": 5166
+          "vertexOffset": 4308168,
+          "vertexCount": 2887,
+          "indexOffset": 4342812,
+          "indexCount": 17442
         },
         {
           "body": 8,
@@ -597,9 +597,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1131348,
+          "vertexOffset": 4377696,
           "vertexCount": 1950,
-          "indexOffset": 1154748,
+          "indexOffset": 4401096,
           "indexCount": 11736
         },
         {
@@ -610,10 +610,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1178220,
-          "vertexCount": 769,
-          "indexOffset": 1187448,
-          "indexCount": 4800
+          "vertexOffset": 4424568,
+          "vertexCount": 10441,
+          "indexOffset": 4549860,
+          "indexCount": 62910
         },
         {
           "body": 8,
@@ -623,10 +623,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1197048,
-          "vertexCount": 769,
-          "indexOffset": 1206276,
-          "indexCount": 4800
+          "vertexOffset": 4675680,
+          "vertexCount": 10441,
+          "indexOffset": 4800972,
+          "indexCount": 62910
         },
         {
           "body": 7,
@@ -636,10 +636,10 @@
             0.116970956325531,
             0.13286833465099335
           ],
-          "vertexOffset": 1215876,
-          "vertexCount": 2223,
-          "indexOffset": 1242552,
-          "indexCount": 13506
+          "vertexOffset": 4926792,
+          "vertexCount": 3532,
+          "indexOffset": 4969176,
+          "indexCount": 21360
         },
         {
           "body": 7,
@@ -649,10 +649,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1269564,
-          "vertexCount": 769,
-          "indexOffset": 1278792,
-          "indexCount": 4800
+          "vertexOffset": 5011896,
+          "vertexCount": 10441,
+          "indexOffset": 5137188,
+          "indexCount": 62910
         },
         {
           "body": 6,
@@ -662,9 +662,9 @@
             0.6038274168968201,
             0.6038274168968201
           ],
-          "vertexOffset": 1288392,
+          "vertexOffset": 5263008,
           "vertexCount": 728,
-          "indexOffset": 1297128,
+          "indexOffset": 5271744,
           "indexCount": 4404
         },
         {
@@ -675,9 +675,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1305936,
+          "vertexOffset": 5280552,
           "vertexCount": 1950,
-          "indexOffset": 1329336,
+          "indexOffset": 5303952,
           "indexCount": 11736
         },
         {
@@ -688,9 +688,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1352808,
+          "vertexOffset": 5327424,
           "vertexCount": 1950,
-          "indexOffset": 1376208,
+          "indexOffset": 5350824,
           "indexCount": 11736
         },
         {
@@ -701,9 +701,9 @@
             0.6038274168968201,
             0.6038274168968201
           ],
-          "vertexOffset": 1399680,
+          "vertexOffset": 5374296,
           "vertexCount": 728,
-          "indexOffset": 1408416,
+          "indexOffset": 5383032,
           "indexCount": 4404
         },
         {
@@ -714,10 +714,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 1417224,
-          "vertexCount": 789,
-          "indexOffset": 1426692,
-          "indexCount": 4800
+          "vertexOffset": 5391840,
+          "vertexCount": 2476,
+          "indexOffset": 5421552,
+          "indexCount": 14928
         },
         {
           "body": 5,
@@ -727,10 +727,10 @@
             0.7011021375656128,
             0.6514056921005249
           ],
-          "vertexOffset": 1436292,
-          "vertexCount": 802,
-          "indexOffset": 1445916,
-          "indexCount": 4800
+          "vertexOffset": 5451408,
+          "vertexCount": 7946,
+          "indexOffset": 5546760,
+          "indexCount": 47664
         },
         {
           "body": 5,
@@ -740,10 +740,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1455516,
-          "vertexCount": 766,
-          "indexOffset": 1464708,
-          "indexCount": 4800
+          "vertexOffset": 5642088,
+          "vertexCount": 10441,
+          "indexOffset": 5767380,
+          "indexCount": 62910
         },
         {
           "body": 5,
@@ -753,10 +753,10 @@
             0.467783123254776,
             0.0003035270783584565
           ],
-          "vertexOffset": 1474308,
-          "vertexCount": 2531,
-          "indexOffset": 1504680,
-          "indexCount": 15306
+          "vertexOffset": 5893200,
+          "vertexCount": 9935,
+          "indexOffset": 6012420,
+          "indexCount": 59742
         },
         {
           "body": 4,
@@ -766,9 +766,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1535292,
+          "vertexOffset": 6131904,
           "vertexCount": 1950,
-          "indexOffset": 1558692,
+          "indexOffset": 6155304,
           "indexCount": 11736
         },
         {
@@ -779,10 +779,10 @@
             0.7083767652511597,
             0.7835373878479004
           ],
-          "vertexOffset": 1582164,
-          "vertexCount": 2000,
-          "indexOffset": 1606164,
-          "indexCount": 12084
+          "vertexOffset": 6178776,
+          "vertexCount": 7374,
+          "indexOffset": 6267264,
+          "indexCount": 44328
         },
         {
           "body": 3,
@@ -792,9 +792,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1630332,
+          "vertexOffset": 6355920,
           "vertexCount": 1950,
-          "indexOffset": 1653732,
+          "indexOffset": 6379320,
           "indexCount": 11736
         },
         {
@@ -805,10 +805,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1677204,
-          "vertexCount": 769,
-          "indexOffset": 1686432,
-          "indexCount": 4800
+          "vertexOffset": 6402792,
+          "vertexCount": 10441,
+          "indexOffset": 6528084,
+          "indexCount": 62910
         },
         {
           "body": 3,
@@ -818,10 +818,10 @@
             0.7011021375656128,
             0.6514056921005249
           ],
-          "vertexOffset": 1696032,
-          "vertexCount": 784,
-          "indexOffset": 1705440,
-          "indexCount": 4800
+          "vertexOffset": 6653904,
+          "vertexCount": 1784,
+          "indexOffset": 6675312,
+          "indexCount": 10800
         },
         {
           "body": 3,
@@ -831,10 +831,10 @@
             0.7230557203292847,
             0.7230557203292847
           ],
-          "vertexOffset": 1715040,
-          "vertexCount": 2511,
-          "indexOffset": 1745172,
-          "indexCount": 15078
+          "vertexOffset": 6696912,
+          "vertexCount": 6123,
+          "indexOffset": 6770388,
+          "indexCount": 36750
         },
         {
           "body": 3,
@@ -844,9 +844,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1775328,
+          "vertexOffset": 6843888,
           "vertexCount": 1950,
-          "indexOffset": 1798728,
+          "indexOffset": 6867288,
           "indexCount": 11736
         },
         {
@@ -857,10 +857,10 @@
             0.7912985682487488,
             0.7912985682487488
           ],
-          "vertexOffset": 1822200,
-          "vertexCount": 2399,
-          "indexOffset": 1850988,
-          "indexCount": 14472
+          "vertexOffset": 6890760,
+          "vertexCount": 10471,
+          "indexOffset": 7016412,
+          "indexCount": 62910
         },
         {
           "body": 2,
@@ -870,10 +870,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1879932,
-          "vertexCount": 769,
-          "indexOffset": 1889160,
-          "indexCount": 4800
+          "vertexOffset": 7142232,
+          "vertexCount": 10441,
+          "indexOffset": 7267524,
+          "indexCount": 62910
         },
         {
           "body": 1,
@@ -883,10 +883,10 @@
             0.37626245617866516,
             0.37626245617866516
           ],
-          "vertexOffset": 1898760,
-          "vertexCount": 1288,
-          "indexOffset": 1914216,
-          "indexCount": 7800
+          "vertexOffset": 7393344,
+          "vertexCount": 6186,
+          "indexOffset": 7467576,
+          "indexCount": 37212
         },
         {
           "body": 1,
@@ -896,9 +896,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 1929816,
+          "vertexOffset": 7542000,
           "vertexCount": 1950,
-          "indexOffset": 1953216,
+          "indexOffset": 7565400,
           "indexCount": 11736
         },
         {
@@ -909,10 +909,10 @@
             0.06480330973863602,
             0.07421369105577469
           ],
-          "vertexOffset": 1976688,
-          "vertexCount": 792,
-          "indexOffset": 1986192,
-          "indexCount": 4800
+          "vertexOffset": 7588872,
+          "vertexCount": 1202,
+          "indexOffset": 7603296,
+          "indexCount": 7260
         },
         {
           "body": 1,
@@ -922,10 +922,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 1995792,
-          "vertexCount": 769,
-          "indexOffset": 2005020,
-          "indexCount": 4800
+          "vertexOffset": 7617816,
+          "vertexCount": 10441,
+          "indexOffset": 7743108,
+          "indexCount": 62910
         },
         {
           "body": 0,
@@ -935,10 +935,10 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 2014620,
-          "vertexCount": 769,
-          "indexOffset": 2023848,
-          "indexCount": 4800
+          "vertexOffset": 7868928,
+          "vertexCount": 10441,
+          "indexOffset": 7994220,
+          "indexCount": 62910
         },
         {
           "body": 0,
@@ -948,10 +948,10 @@
             0.6038274168968201,
             0.6038274168968201
           ],
-          "vertexOffset": 2033448,
-          "vertexCount": 1997,
-          "indexOffset": 2057412,
-          "indexCount": 12036
+          "vertexOffset": 8120040,
+          "vertexCount": 10475,
+          "indexOffset": 8245740,
+          "indexCount": 62910
         },
         {
           "body": 0,
@@ -961,9 +961,9 @@
             0.37626245617866516,
             0.37626245617866516
           ],
-          "vertexOffset": 2081484,
+          "vertexOffset": 8371560,
           "vertexCount": 692,
-          "indexOffset": 2089788,
+          "indexOffset": 8379864,
           "indexCount": 4164
         },
         {
@@ -974,10 +974,10 @@
             0.116970956325531,
             0.13286833465099335
           ],
-          "vertexOffset": 2098116,
-          "vertexCount": 790,
-          "indexOffset": 2107596,
-          "indexCount": 4800
+          "vertexOffset": 8388192,
+          "vertexCount": 1837,
+          "indexOffset": 8410236,
+          "indexCount": 11094
         },
         {
           "body": 0,
@@ -987,9 +987,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 2117196,
+          "vertexOffset": 8432424,
           "vertexCount": 1950,
-          "indexOffset": 2140596,
+          "indexOffset": 8455824,
           "indexCount": 11736
         },
         {
@@ -1000,10 +1000,10 @@
             0.7912985682487488,
             0.7912985682487488
           ],
-          "vertexOffset": 2164068,
-          "vertexCount": 3041,
-          "indexOffset": 2200560,
-          "indexCount": 18342
+          "vertexOffset": 8479296,
+          "vertexCount": 6384,
+          "indexOffset": 8555904,
+          "indexCount": 38496
         },
         {
           "body": 0,
@@ -1013,10 +1013,10 @@
             0.7912985682487488,
             0.7912985682487488
           ],
-          "vertexOffset": 2237244,
-          "vertexCount": 7033,
-          "indexOffset": 2321640,
-          "indexCount": 42186
+          "vertexOffset": 8632896,
+          "vertexCount": 10487,
+          "indexOffset": 8758740,
+          "indexCount": 62910
         },
         {
           "body": 0,
@@ -1026,9 +1026,9 @@
             0.06662617623806,
             0.06662617623806
           ],
-          "vertexOffset": 2406012,
+          "vertexOffset": 8884560,
           "vertexCount": 1950,
-          "indexOffset": 2429412,
+          "indexOffset": 8907960,
           "indexCount": 11736
         },
         {
@@ -1039,10 +1039,10 @@
             0.6038274168968201,
             0.6038274168968201
           ],
-          "vertexOffset": 2452884,
-          "vertexCount": 1945,
-          "indexOffset": 2476224,
-          "indexCount": 11724
+          "vertexOffset": 8931432,
+          "vertexCount": 10475,
+          "indexOffset": 9057132,
+          "indexCount": 62910
         },
         {
           "body": 0,
@@ -1052,11 +1052,17 @@
             0.5394790172576904,
             0.6038274168968201
           ],
-          "vertexOffset": 2499672,
-          "vertexCount": 769,
-          "indexOffset": 2508900,
-          "indexCount": 4800
+          "vertexOffset": 9182952,
+          "vertexCount": 10441,
+          "indexOffset": 9308244,
+          "indexCount": 62910
         }
+      ],
+      "files": [
+        "visuals.bin-0.gz",
+        "visuals.bin-1.gz",
+        "visuals.bin-2.gz",
+        "visuals.bin-3.gz"
       ]
     },
     "rootBody": 0,
@@ -1086,7 +1092,7 @@
       1.0
     ],
     "pushMaxForce": 2.0,
-    "maxStepsPerFrame": 8,
+    "maxStepsPerFrame": 12,
     "physicsDt": 0.005,
     "physicsDecimation": 4,
     "actuator": "native BAM",

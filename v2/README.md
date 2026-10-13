@@ -18,7 +18,9 @@ or enable Mouse push, to apply a bounded horizontal force; releasing the pointer
 
 The courtyard uses inexpensive procedural scenery over the task's flat ground.
 Its paving and lawn share an edge without overlapping ground layers. The robot keeps
-the asset's material colors and flat CAD shading. The trees are decoration.
+the asset's material colors and flat CAD shading. Mesh reduction must preserve closed
+shells, topology, and volume within 2%; otherwise the original CAD mesh is retained.
+The trees are decoration.
 The robot uses the published whole-body collision variant
 so pushes and falls include body contacts. Its geometry, mass, inertia, and BAM
 voltage/friction/delay kernels come from the native asset and task.
@@ -31,7 +33,8 @@ The viewer catches up across slower render frames while keeping that control per
 This is a browser demonstration, not a policy validation benchmark; low velocity
 commands can produce very little travel with this checkpoint.
 
-The new bundle is about 3.2 MB. The gallery reuses version 1's existing assets and
+The new bundle is about 7.6 MB, including the detailed CAD surfaces. Visual data use gzip
+and ordered parts below 1.9 MB. The gallery reuses version 1's existing assets and
 Three.js module, and loads the simulation only when a demo is selected.
 Version 1 and the Isaac Lab release archive are unchanged.
 
@@ -41,6 +44,8 @@ Use Isaac Lab revision `c47ef303990cfc117a9e0053a1a5e6864b46a513` from #8270
 and its frozen uv environment. The MicroDuck exporter uses Newton `1.7.0.dev0`
 at `5ea82eef6f7911388025a8df6ccdb172e2fed286`, Warp `1.17.0`, and MJWarp `3.14.0`.
 It shares `bundle.py` and `manipulation.py` with the existing exporters.
+Use the [prototype exporters](https://gitlab-master.nvidia.com/omniverse/isaac/isaaclab-browser-demos/-/tree/feature/microduck-browser/exporters)
+from the source project's `feature/microduck-browser` branch.
 Install the internal Newton Web compiler at `b0795fbe6b46e08a1fea2425699421415ca4cdf1`,
 ONNX, and ONNX Runtime into that environment; use Emscripten 5.0.3.
 

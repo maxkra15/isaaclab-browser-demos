@@ -276,7 +276,7 @@ def export(output: Path, checkpoint: Path) -> None:
                 "scene": "courtyard",
                 "velocityScale": [0.4, 0.3, 1.0],
                 "pushMaxForce": 2.0,
-                "maxStepsPerFrame": 8,
+                "maxStepsPerFrame": 12,
                 "physicsDt": cfg.sim.dt,
                 "physicsDecimation": cfg.decimation,
                 "actuator": "native BAM",
@@ -343,8 +343,12 @@ def main() -> None:
         manifest["wasmFiles"] = files
     wasm.unlink()
     (web / "policy.bin").write_bytes((bundle / "policy.bin").read_bytes())
-    (web / "visuals.bin.gz").write_bytes(gzip.compress((bundle / "visuals.bin").read_bytes(), mtime=0))
+    visual_files = write_binary_files(
+        gzip.compress((bundle / "visuals.bin").read_bytes(), mtime=0), web, "visuals.bin.gz"
+    )
     manifest["isaacLabDemo"]["visuals"]["file"] = "visuals.bin.gz"
+    if len(visual_files) > 1:
+        manifest["isaacLabDemo"]["visuals"]["files"] = visual_files
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
 
 

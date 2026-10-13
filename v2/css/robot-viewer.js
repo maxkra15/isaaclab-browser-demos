@@ -11,12 +11,16 @@ export class RobotViewer {
   static async load(canvas, simulation) {
     const { visuals } = simulation.manifest.isaacLabDemo;
     const assets = await Promise.all((Array.isArray(visuals) ? visuals : [visuals]).map(async (description) => {
-      const response = await fetch(new URL(description.file, simulation.url));
-      if (!response.ok) throw new Error(`Robot visual request failed (${response.status})`);
-      let data = await response.arrayBuffer();
+      const chunks = await Promise.all((description.files || [description.file]).map(async (file) => {
+        const response = await fetch(new URL(file, simulation.url));
+        if (!response.ok) throw new Error(`Robot visual request failed (${response.status})`);
+        return response.arrayBuffer();
+      }));
+      let stream = new Blob(chunks).stream();
       if (description.file.endsWith('.gz')) {
-        data = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+        stream = stream.pipeThrough(new DecompressionStream('gzip'));
       }
+      const data = await new Response(stream).arrayBuffer();
       if (data.byteLength !== description.byteLength) throw new Error('Robot visual bundle size does not match its manifest');
       return { description, data };
     }));
