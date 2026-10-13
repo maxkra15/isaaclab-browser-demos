@@ -17,7 +17,9 @@ Walk forward and Stand buttons provide useful starting commands. Shift-drag the 
 or enable Mouse push, to apply a bounded horizontal force; releasing the pointer removes it.
 
 The courtyard uses inexpensive procedural scenery over the task's flat ground.
-The trees are decoration. The robot uses the published whole-body collision variant
+Its paving and lawn share an edge without overlapping ground layers. The robot keeps
+the asset's material colors and flat CAD shading. The trees are decoration.
+The robot uses the published whole-body collision variant
 so pushes and falls include body contacts. Its geometry, mass, inertia, and BAM
 voltage/friction/delay kernels come from the native asset and task.
 This prototype uses MJWarp's built-in collision path: the current exporter does not

@@ -22,7 +22,9 @@ export class RobotViewer {
     }));
     const viewer = new RobotViewer(canvas, simulation, assets);
     try {
-      viewer.disposeGround = await addIsaacLabGround(viewer.scene, simulation.manifest.isaacLabDemo.groundHeight || 0);
+      if (viewer.demo.scene !== 'courtyard') {
+        viewer.disposeGround = await addIsaacLabGround(viewer.scene, simulation.manifest.isaacLabDemo.groundHeight || 0);
+      }
       return viewer;
     } catch (error) {
       viewer.dispose();
@@ -50,22 +52,25 @@ export class RobotViewer {
     this.orbit = new OrbitCamera(canvas, this.camera, this.demo.cameraAzimuth ?? (this.isManipulation ? -2.2 : Math.PI),
       this.isManipulation ? 0.45 : 0.28, this.demo.cameraRadius || (this.isAnymal ? 2.4 : 3.0));
 
-    this.scene.add(new THREE.HemisphereLight('#ffffff', '#acb9be', 2.2));
-    const key = new THREE.DirectionalLight('#ffffff', 3.0);
+    const microduck = this.demo.kind === 'microduck';
+    this.scene.add(new THREE.HemisphereLight('#ffffff', '#acb9be', microduck ? 1.3 : 2.2));
+    const key = new THREE.DirectionalLight('#ffffff', microduck ? 2.5 : 3.0);
     key.position.set(3, 5, 4);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    key.shadow.camera.left = -2.5;
-    key.shadow.camera.right = 2.5;
-    key.shadow.camera.top = 2.5;
-    key.shadow.camera.bottom = -2.5;
+    const shadowExtent = microduck ? 0.75 : 2.5;
+    key.shadow.camera.left = -shadowExtent;
+    key.shadow.camera.right = shadowExtent;
+    key.shadow.camera.top = shadowExtent;
+    key.shadow.camera.bottom = -shadowExtent;
     key.shadow.camera.near = 0.1;
     key.shadow.camera.far = 12;
-    key.shadow.bias = -0.0001;
+    key.shadow.bias = microduck ? -0.000005 : -0.0001;
+    key.shadow.normalBias = microduck ? 0.0003 : 0;
     this.key = key;
     this.scene.add(key);
     this.scene.add(key.target);
-    const fill = new THREE.DirectionalLight('#d7e6ed', 1.4);
+    const fill = new THREE.DirectionalLight('#d7e6ed', microduck ? 0.55 : 1.4);
     fill.position.set(-3, 2, -2);
     this.scene.add(fill);
 
@@ -97,7 +102,9 @@ export class RobotViewer {
         const name = visual.color.join(',');
         if (!materials[name]) {
           materials[name] = new THREE.MeshStandardMaterial({
-            color: new THREE.Color().setRGB(...visual.color), roughness: 0.6, metalness: 0.05,
+            color: new THREE.Color().setRGB(...visual.color),
+            roughness: microduck ? 0.5 : 0.6, metalness: microduck ? 0 : 0.05,
+            flatShading: microduck,
           });
           this.materials.push(materials[name]);
         }
@@ -126,32 +133,38 @@ export class RobotViewer {
     this.scene.background.set('#dce8ed');
     this.scene.fog = new THREE.Fog('#dce8ed', 4, 12);
     const grassMaterial = new THREE.MeshStandardMaterial({ color: '#9fac87', roughness: 1 });
-    const grassGeometry = new THREE.PlaneGeometry(20, 20);
+    const lawn = new THREE.Shape([
+      new THREE.Vector2(-10, -10), new THREE.Vector2(10, -10),
+      new THREE.Vector2(10, 10), new THREE.Vector2(-10, 10),
+    ]);
+    lawn.holes.push(new THREE.Path([
+      new THREE.Vector2(-2.5, -2.5), new THREE.Vector2(-2.5, 2.5),
+      new THREE.Vector2(2.5, 2.5), new THREE.Vector2(2.5, -2.5),
+    ]));
+    const grassGeometry = new THREE.ShapeGeometry(lawn);
     const grass = new THREE.Mesh(grassGeometry, grassMaterial);
     grass.rotation.x = -Math.PI / 2;
-    grass.position.y = 0.0001;
     grass.receiveShadow = true;
     this.scene.add(grass);
     this.materials.push(grassMaterial);
     this.geometries.push(grassGeometry);
     const material = new THREE.MeshStandardMaterial({ color: '#ddd4bf', roughness: 1 });
-    const geometry = new THREE.PlaneGeometry(5, 3.4);
+    const geometry = new THREE.PlaneGeometry(5, 5);
     const court = new THREE.Mesh(geometry, material);
     court.rotation.x = -Math.PI / 2;
-    court.position.y = 0.0002;
     court.receiveShadow = true;
     this.scene.add(court);
     this.materials.push(material);
     this.geometries.push(geometry);
     const lines = new THREE.GridHelper(5, 20, '#bfb299', '#cbbfa9');
-    lines.position.y = 0.0004;
+    lines.position.y = 0.001;
     this.scene.add(lines);
     this.geometries.push(lines.geometry);
     this.materials.push(lines.material);
     const green = new THREE.MeshStandardMaterial({ color: '#637e5a', roughness: 1 });
     const wood = new THREE.MeshStandardMaterial({ color: '#aa8565', roughness: 0.9 });
     this.materials.push(green, wood);
-    for (const [x, z] of [[-2.2, -1.9], [2.2, -1.9], [-2.2, 1.9], [2.2, 1.9]]) {
+    for (const [x, z] of [[-2.9, -2.9], [2.9, -2.9], [-2.9, 2.9], [2.9, 2.9]]) {
       const trunkGeometry = new THREE.CylinderGeometry(0.025, 0.035, 0.4, 8);
       const trunk = new THREE.Mesh(trunkGeometry, wood);
       trunk.position.set(x, 0.2, z);
