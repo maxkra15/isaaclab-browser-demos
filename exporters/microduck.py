@@ -164,7 +164,7 @@ def export(output: Path, checkpoint: Path) -> None:
     with launch_simulation(cfg, {"visualizer": ["none"], "device": "cpu"}):
         env = ManagerBasedRLEnv(cfg)
         try:
-            env.reset(seed=42)
+            obs, _ = env.reset(seed=42)
             robot = env.scene["robot"]
             if env.action_manager.get_term("joint_pos")._joint_names != MICRODUCK_JOINT_NAMES:
                 raise ValueError("MicroDuck action order changed")
@@ -206,14 +206,13 @@ def export(output: Path, checkpoint: Path) -> None:
                 velocity_command = (0.0, 0.0, 0.0) if step < 40 else (0.35, 0.0, 0.0)
                 env.command_manager.get_command("base_velocity")[:] = torch.tensor(velocity_command)
                 command.assign([*velocity_command, *([0.0] * 10)])
-                native_observation = env.observation_manager.compute()["policy"].numpy()[0]
+                native_observation = obs["policy"].numpy()[0].copy()
+                native_observation[48:51] = velocity_command
                 wp.launch(_observe, dim=61, inputs=observe_args, device="cpu")
-                # After the first sample, check every input except the separately retained velocity lag.
-                keep = list(range(20)) + list(range(34, 61))
-                np.testing.assert_allclose(observation.numpy()[keep], native_observation[keep], atol=2e-5)
+                np.testing.assert_allclose(observation.numpy(), native_observation, atol=2e-5)
                 predicted = actor.run(None, {"obs": native_observation[None]})[0]
                 action.assign(predicted[0])
-                _, _, done, _, _ = env.step(torch.from_numpy(predicted))
+                obs, _, done, _, _ = env.step(torch.from_numpy(predicted))
                 if done.any():
                     raise RuntimeError("MicroDuck native walking validation terminated")
                 reference.append(state.body_q.numpy().copy())
@@ -230,7 +229,7 @@ def export(output: Path, checkpoint: Path) -> None:
             with wp.ScopedCapture(device="cpu", apic=True) as capture:
                 wp.launch(_apply_action, dim=14, inputs=[action, slot_indices, defaults, targets], device="cpu")
                 env.scene.write_data_to_sim()
-                NewtonManager.step()
+                env.sim.step(render=False)
                 wp.launch(_observe, dim=61, inputs=observe_args, device="cpu")
             # Captured articulation views alias scene arrays; retain the largest owning region.
             regions = {}
@@ -277,7 +276,7 @@ def export(output: Path, checkpoint: Path) -> None:
                 "scene": "courtyard",
                 "velocityScale": [0.4, 0.3, 1.0],
                 "pushMaxForce": 2.0,
-                "maxStepsPerFrame": 2,
+                "maxStepsPerFrame": 8,
                 "physicsDt": cfg.sim.dt,
                 "physicsDecimation": cfg.decimation,
                 "actuator": "native BAM",
@@ -299,6 +298,8 @@ def export(output: Path, checkpoint: Path) -> None:
             manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
             np.savez(output / "native_reference.npz", body_q=reference)
             # Review graph replay with the same ONNX actor before compilation.
+            solver_time = NewtonManager._solver.mjw_data.time
+            start_time = solver_time.numpy().copy()
             for step in range(160):
                 command.assign([0.0 if step < 40 else 0.35, *([0.0] * 12)])
                 observation_np = observation.numpy()
@@ -307,6 +308,8 @@ def export(output: Path, checkpoint: Path) -> None:
                 predicted = actor.run(None, {"obs": observation.numpy()[None]})[0]
                 action.assign(predicted[0])
                 wp.capture_launch(capture.graph)
+                if step == 0:
+                    np.testing.assert_allclose(solver_time.numpy() - start_time, env.step_dt, atol=2e-6)
                 if not np.isfinite(state.body_q.numpy()).all() or state.body_q.numpy()[root, 2] < 0.06:
                     raise RuntimeError("MicroDuck captured walking validation failed")
             if state.body_q.numpy()[root, 0] < 0.02:

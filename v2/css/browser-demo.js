@@ -770,8 +770,11 @@ class IsaacLabBrowserDemo extends HTMLElement {
     }
     try {
       if (this.running && this.visible) {
-        this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, 0.05), 0.06);
-        const steps = Math.min(this.demo.maxStepsPerFrame || 12, Math.floor(this.elapsed / this.simulation.manifest.timestep));
+        const maxSteps = this.demo.maxStepsPerFrame || 12;
+        const frameTimeLimit = Math.max(0.05, (this.demo.maxStepsPerFrame || 0) * this.simulation.manifest.timestep);
+        this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, frameTimeLimit),
+          Math.max(0.06, frameTimeLimit));
+        const steps = Math.min(maxSteps, Math.floor(this.elapsed / this.simulation.manifest.timestep));
         let resetDuringFrame = false;
         for (let index = 0; index < steps; index += 1) {
           if (this.policy && this.tick % this.demo.decimation === 0) {

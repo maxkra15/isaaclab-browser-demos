@@ -24,10 +24,12 @@ This prototype uses MJWarp's built-in collision path: the current exporter does 
 relocate the native pointers used by Newton's convex support-map provider.
 Encoder bias, IMU misalignment and IMU lag are disabled for deterministic exploration;
 the one-control-step joint-velocity observation delay and BAM command delay remain.
+Each policy tick advances four 5 ms physics steps through the task's active manager.
+The viewer catches up across slower render frames while keeping that control period fixed.
 This is a browser demonstration, not a policy validation benchmark; low velocity
 commands can produce very little travel with this checkpoint.
 
-The new bundle is about 2.8 MB. The gallery reuses version 1's existing assets and
+The new bundle is about 3.2 MB. The gallery reuses version 1's existing assets and
 Three.js module, and loads the simulation only when a demo is selected.
 Version 1 and the Isaac Lab release archive are unchanged.
 
@@ -52,7 +54,7 @@ Copy `microduck-web/` into `v2/browser_demos/microduck/` and retain
 the asset attribution, visual license, and policy license. Serve the complete site
 over HTTP for local preview. The exporter checks the checkpoint hash and toolchain,
 compares the policy observations with native Isaac Lab, and verifies native and
-captured standing/walking before compiling.
+captured standing/walking and the solver's elapsed time before compiling.
 
 ## AlphaNIST
 

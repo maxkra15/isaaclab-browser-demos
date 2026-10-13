@@ -1086,7 +1086,7 @@
       1.0
     ],
     "pushMaxForce": 2.0,
-    "maxStepsPerFrame": 2,
+    "maxStepsPerFrame": 8,
     "physicsDt": 0.005,
     "physicsDecimation": 4,
     "actuator": "native BAM",
