@@ -10,6 +10,8 @@ SPDX-License-Identifier: BSD-3-Clause
 Static deployment mirror for the interactive Newton demos linked from Isaac Lab
 documentation. Physics and policy inference run locally in the browser.
 
+[Open the public gallery](https://maxkra15.github.io/isaaclab-browser-demos/v1/).
+
 The NVIDIA-maintained source project is
 [Isaac Lab Browser Demos](https://gitlab-master.nvidia.com/omniverse/isaac/isaaclab-browser-demos/-/tree/pages).
 The public [reference source](https://github.com/isaac-sim/IsaacLab/pull/7974)
