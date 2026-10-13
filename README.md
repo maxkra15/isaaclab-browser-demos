@@ -7,10 +7,30 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Isaac Lab browser demos
 
-Static deployment mirror for the interactive Newton demos linked from Isaac Lab
-documentation. Physics and policy inference run locally in the browser.
+Prototype hosting for interactive Newton demos. Physics and policy inference run
+locally in the browser. The reviewed release is now served by
+[Isaac Lab documentation](https://isaac-sim.github.io/IsaacLab/demos/v1/).
 
-[Open the public gallery](https://maxkra15.github.io/isaaclab-browser-demos/v1/).
+[Open the prototype gallery](https://maxkra15.github.io/isaaclab-browser-demos/v2/).
+
+## MicroDuck prototype
+
+[Play MicroDuck walking](https://maxkra15.github.io/isaaclab-browser-demos/v2/?demo=microduck).
+Travel and yaw sticks, Walk forward / Stand, pause, reset, and bounded mouse pushes
+share the existing viewer. Physics uses native BAM servos, the published whole-body
+asset, and MJWarp contacts; the actor is Pollen Robotics' v5 `velstand.onnx`.
+
+![MicroDuck browser scene](v2/browser_demos/previews/microduck.jpg)
+
+See [setup and physics details](v2/README.md) and the
+[exporter](exporters/microduck.py). The exporter reuses `bundle.py` and
+`manipulation.py` from the existing source project/reference implementation;
+its build requires the internal Newton Web compiler. Running the published demo
+requires only a browser.
+
+The [AlphaNIST notes](v2/README.md#alphanist) describe the verified ONNX actor
+conversion and the CUDA texture-SDF dependency that must be addressed for faithful
+browser physics. AlphaNIST is not published as a runnable browser demo yet.
 
 The NVIDIA-maintained source project is
 [Isaac Lab Browser Demos](https://gitlab-master.nvidia.com/omniverse/isaac/isaaclab-browser-demos/-/tree/pages).

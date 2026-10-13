@@ -1,0 +1,1108 @@
+{
+  "bundleVersion": 1,
+  "abiVersion": 1,
+  "timestep": 0.02,
+  "module": "simulation.mjs",
+  "wasm": "simulation.wasm.gz",
+  "bindings": {
+    "body_q": {
+      "dtype": "float32",
+      "shape": [
+        15,
+        7
+      ],
+      "byteLength": 420
+    },
+    "body_qd": {
+      "dtype": "float32",
+      "shape": [
+        15,
+        6
+      ],
+      "byteLength": 360
+    },
+    "joint_q": {
+      "dtype": "float32",
+      "shape": [
+        21
+      ],
+      "byteLength": 84
+    },
+    "joint_qd": {
+      "dtype": "float32",
+      "shape": [
+        20
+      ],
+      "byteLength": 80
+    },
+    "action": {
+      "dtype": "float32",
+      "shape": [
+        14
+      ],
+      "byteLength": 56
+    },
+    "command": {
+      "dtype": "float32",
+      "shape": [
+        13
+      ],
+      "byteLength": 52
+    },
+    "force": {
+      "dtype": "float32",
+      "shape": [
+        2
+      ],
+      "byteLength": 8
+    },
+    "observation": {
+      "dtype": "float32",
+      "shape": [
+        61
+      ],
+      "byteLength": 244
+    }
+  },
+  "inputs": [
+    "body_q",
+    "body_qd",
+    "joint_q",
+    "joint_qd",
+    "action",
+    "command",
+    "force",
+    "observation"
+  ],
+  "outputs": [
+    "body_q",
+    "body_qd",
+    "joint_q",
+    "joint_qd",
+    "observation"
+  ],
+  "parameters": [],
+  "visualization": {
+    "upAxis": "Z",
+    "bodyCount": 15,
+    "bodyBinding": "body_q",
+    "particleCount": 0,
+    "particleBinding": null,
+    "ground": {
+      "type": "plane",
+      "size": [
+        8.0,
+        8.0
+      ],
+      "transform": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "shapes": [],
+    "softMeshes": [],
+    "particleClouds": []
+  },
+  "build": {
+    "warp": "1.17.0"
+  },
+  "isaacLabDemo": {
+    "kind": "microduck",
+    "title": "MicroDuck walking",
+    "task": "IsaacContrib-Velocity-Flat-MicroDuck",
+    "policyType": "microduck",
+    "policy": {
+      "file": "policy.bin",
+      "layers": [
+        {
+          "rows": 512,
+          "columns": 61,
+          "offset": 0
+        },
+        {
+          "rows": 256,
+          "columns": 512,
+          "offset": 31744
+        },
+        {
+          "rows": 128,
+          "columns": 256,
+          "offset": 163072
+        },
+        {
+          "rows": 14,
+          "columns": 128,
+          "offset": 195968
+        }
+      ],
+      "source": "https://huggingface.co/pollen-robotics/microduck-policies/resolve/v5/velstand.onnx",
+      "sha256": "1c659be55da94bc5753b707de5c6a3e7c49931e05ca3b6991615cef1a8ba9a45"
+    },
+    "visuals": {
+      "file": "visuals.bin.gz",
+      "byteLength": 2518500,
+      "meshes": [
+        {
+          "body": 14,
+          "name": "sole_left",
+          "color": [
+            0.250158429145813,
+            0.7011021375656128,
+            0.6514056921005249
+          ],
+          "vertexOffset": 0,
+          "vertexCount": 802,
+          "indexOffset": 9624,
+          "indexCount": 4800
+        },
+        {
+          "body": 14,
+          "name": "foot_left",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 19224,
+          "vertexCount": 2348,
+          "indexOffset": 47400,
+          "indexCount": 14208
+        },
+        {
+          "body": 14,
+          "name": "seeed_bearing__configuration_default",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 75816,
+          "vertexCount": 766,
+          "indexOffset": 85008,
+          "indexCount": 4800
+        },
+        {
+          "body": 14,
+          "name": "ankle_left",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 94608,
+          "vertexCount": 788,
+          "indexOffset": 104064,
+          "indexCount": 4800
+        },
+        {
+          "body": 13,
+          "name": "leg",
+          "color": [
+            0.6239610314369202,
+            0.7083767652511597,
+            0.7835373878479004
+          ],
+          "vertexOffset": 113664,
+          "vertexCount": 2000,
+          "indexOffset": 137664,
+          "indexCount": 12084
+        },
+        {
+          "body": 13,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 161832,
+          "vertexCount": 1950,
+          "indexOffset": 185232,
+          "indexCount": 11736
+        },
+        {
+          "body": 12,
+          "name": "upper_leg_left",
+          "color": [
+            0.7230557203292847,
+            0.7230557203292847,
+            0.7230557203292847
+          ],
+          "vertexOffset": 208704,
+          "vertexCount": 2488,
+          "indexOffset": 238560,
+          "indexCount": 14940
+        },
+        {
+          "body": 12,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 268440,
+          "vertexCount": 1950,
+          "indexOffset": 291840,
+          "indexCount": 11736
+        },
+        {
+          "body": 12,
+          "name": "upper_leg_rigidity_plate",
+          "color": [
+            0.250158429145813,
+            0.7011021375656128,
+            0.6514056921005249
+          ],
+          "vertexOffset": 315312,
+          "vertexCount": 784,
+          "indexOffset": 324720,
+          "indexCount": 4800
+        },
+        {
+          "body": 12,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 334320,
+          "vertexCount": 769,
+          "indexOffset": 343548,
+          "indexCount": 4800
+        },
+        {
+          "body": 12,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 353148,
+          "vertexCount": 1950,
+          "indexOffset": 376548,
+          "indexCount": 11736
+        },
+        {
+          "body": 11,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 400020,
+          "vertexCount": 769,
+          "indexOffset": 409248,
+          "indexCount": 4800
+        },
+        {
+          "body": 11,
+          "name": "hip_l",
+          "color": [
+            0.7912985682487488,
+            0.7912985682487488,
+            0.7912985682487488
+          ],
+          "vertexOffset": 418848,
+          "vertexCount": 2399,
+          "indexOffset": 447636,
+          "indexCount": 14472
+        },
+        {
+          "body": 10,
+          "name": "yaw2roll",
+          "color": [
+            0.37626245617866516,
+            0.37626245617866516,
+            0.37626245617866516
+          ],
+          "vertexOffset": 476580,
+          "vertexCount": 1288,
+          "indexOffset": 492036,
+          "indexCount": 7800
+        },
+        {
+          "body": 10,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 507636,
+          "vertexCount": 1950,
+          "indexOffset": 531036,
+          "indexCount": 11736
+        },
+        {
+          "body": 10,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 554508,
+          "vertexCount": 769,
+          "indexOffset": 563736,
+          "indexCount": 4800
+        },
+        {
+          "body": 10,
+          "name": "bearing_roll",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 573336,
+          "vertexCount": 792,
+          "indexOffset": 582840,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "lens",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 592440,
+          "vertexCount": 802,
+          "indexOffset": 602064,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "face_part",
+          "color": [
+            0.09989896416664124,
+            0.116970956325531,
+            0.13286833465099335
+          ],
+          "vertexOffset": 611664,
+          "vertexCount": 2894,
+          "indexOffset": 646392,
+          "indexCount": 17382
+        },
+        {
+          "body": 9,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 681156,
+          "vertexCount": 1950,
+          "indexOffset": 704556,
+          "indexCount": 11736
+        },
+        {
+          "body": 9,
+          "name": "jaw_soft",
+          "color": [
+            0.6938710808753967,
+            0.5332767963409424,
+            0.7230557203292847
+          ],
+          "vertexOffset": 728028,
+          "vertexCount": 999,
+          "indexOffset": 740016,
+          "indexCount": 5982
+        },
+        {
+          "body": 9,
+          "name": "motor_support",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 751980,
+          "vertexCount": 792,
+          "indexOffset": 761484,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "top_head_shell",
+          "color": [
+            0.7912985682487488,
+            0.7912985682487488,
+            0.7912985682487488
+          ],
+          "vertexOffset": 771084,
+          "vertexCount": 1550,
+          "indexOffset": 789684,
+          "indexCount": 9288
+        },
+        {
+          "body": 9,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 808260,
+          "vertexCount": 1950,
+          "indexOffset": 831660,
+          "indexCount": 11736
+        },
+        {
+          "body": 9,
+          "name": "seeed_bearing__configuration_default",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 855132,
+          "vertexCount": 766,
+          "indexOffset": 864324,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "elec_rpi_robot_hat_pcb",
+          "color": [
+            0.080219566822052,
+            0.20155668258666992,
+            0.14126352965831757
+          ],
+          "vertexOffset": 873924,
+          "vertexCount": 692,
+          "indexOffset": 882228,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "soft_mouth_top",
+          "color": [
+            0.6938710808753967,
+            0.5332767963409424,
+            0.7230557203292847
+          ],
+          "vertexOffset": 891828,
+          "vertexCount": 1003,
+          "indexOffset": 903864,
+          "indexCount": 6006
+        },
+        {
+          "body": 9,
+          "name": "noenoeil",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 915876,
+          "vertexCount": 492,
+          "indexOffset": 921780,
+          "indexCount": 2952
+        },
+        {
+          "body": 9,
+          "name": "jaw",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 927684,
+          "vertexCount": 2234,
+          "indexOffset": 954492,
+          "indexCount": 13464
+        },
+        {
+          "body": 9,
+          "name": "bottom_head_shell",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 981420,
+          "vertexCount": 2046,
+          "indexOffset": 1005972,
+          "indexCount": 12300
+        },
+        {
+          "body": 9,
+          "name": "m12_lens_holder",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 1030572,
+          "vertexCount": 2566,
+          "indexOffset": 1061364,
+          "indexCount": 15414
+        },
+        {
+          "body": 9,
+          "name": "pcb__raspberry_pi_zero_2_w",
+          "color": [
+            0.2122306078672409,
+            0.2122306078672409,
+            0.2122306078672409
+          ],
+          "vertexOffset": 1092192,
+          "vertexCount": 736,
+          "indexOffset": 1101024,
+          "indexCount": 4800
+        },
+        {
+          "body": 9,
+          "name": "speaker",
+          "color": [
+            0.07036025822162628,
+            0.06847813725471497,
+            0.06847813725471497
+          ],
+          "vertexOffset": 1110624,
+          "vertexCount": 8,
+          "indexOffset": 1110720,
+          "indexCount": 36
+        },
+        {
+          "body": 8,
+          "name": "yaw_roll_motion",
+          "color": [
+            0.552010715007782,
+            0.7605254650115967,
+            0.8962691426277161
+          ],
+          "vertexOffset": 1110792,
+          "vertexCount": 852,
+          "indexOffset": 1121016,
+          "indexCount": 5166
+        },
+        {
+          "body": 8,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1131348,
+          "vertexCount": 1950,
+          "indexOffset": 1154748,
+          "indexCount": 11736
+        },
+        {
+          "body": 8,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1178220,
+          "vertexCount": 769,
+          "indexOffset": 1187448,
+          "indexCount": 4800
+        },
+        {
+          "body": 8,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1197048,
+          "vertexCount": 769,
+          "indexOffset": 1206276,
+          "indexCount": 4800
+        },
+        {
+          "body": 7,
+          "name": "neck_pitch",
+          "color": [
+            0.09989896416664124,
+            0.116970956325531,
+            0.13286833465099335
+          ],
+          "vertexOffset": 1215876,
+          "vertexCount": 2223,
+          "indexOffset": 1242552,
+          "indexCount": 13506
+        },
+        {
+          "body": 7,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1269564,
+          "vertexCount": 769,
+          "indexOffset": 1278792,
+          "indexCount": 4800
+        },
+        {
+          "body": 6,
+          "name": "neck",
+          "color": [
+            0.6038274168968201,
+            0.6038274168968201,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1288392,
+          "vertexCount": 728,
+          "indexOffset": 1297128,
+          "indexCount": 4404
+        },
+        {
+          "body": 6,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1305936,
+          "vertexCount": 1950,
+          "indexOffset": 1329336,
+          "indexCount": 11736
+        },
+        {
+          "body": 6,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1352808,
+          "vertexCount": 1950,
+          "indexOffset": 1376208,
+          "indexCount": 11736
+        },
+        {
+          "body": 6,
+          "name": "neck",
+          "color": [
+            0.6038274168968201,
+            0.6038274168968201,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1399680,
+          "vertexCount": 728,
+          "indexOffset": 1408416,
+          "indexCount": 4404
+        },
+        {
+          "body": 5,
+          "name": "ankle_right",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 1417224,
+          "vertexCount": 789,
+          "indexOffset": 1426692,
+          "indexCount": 4800
+        },
+        {
+          "body": 5,
+          "name": "sole_right",
+          "color": [
+            0.250158429145813,
+            0.7011021375656128,
+            0.6514056921005249
+          ],
+          "vertexOffset": 1436292,
+          "vertexCount": 802,
+          "indexOffset": 1445916,
+          "indexCount": 4800
+        },
+        {
+          "body": 5,
+          "name": "seeed_bearing__configuration_default",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1455516,
+          "vertexCount": 766,
+          "indexOffset": 1464708,
+          "indexCount": 4800
+        },
+        {
+          "body": 5,
+          "name": "foot_right",
+          "color": [
+            0.9559729695320129,
+            0.467783123254776,
+            0.0003035270783584565
+          ],
+          "vertexOffset": 1474308,
+          "vertexCount": 2531,
+          "indexOffset": 1504680,
+          "indexCount": 15306
+        },
+        {
+          "body": 4,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1535292,
+          "vertexCount": 1950,
+          "indexOffset": 1558692,
+          "indexCount": 11736
+        },
+        {
+          "body": 4,
+          "name": "leg",
+          "color": [
+            0.6239610314369202,
+            0.7083767652511597,
+            0.7835373878479004
+          ],
+          "vertexOffset": 1582164,
+          "vertexCount": 2000,
+          "indexOffset": 1606164,
+          "indexCount": 12084
+        },
+        {
+          "body": 3,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1630332,
+          "vertexCount": 1950,
+          "indexOffset": 1653732,
+          "indexCount": 11736
+        },
+        {
+          "body": 3,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1677204,
+          "vertexCount": 769,
+          "indexOffset": 1686432,
+          "indexCount": 4800
+        },
+        {
+          "body": 3,
+          "name": "upper_leg_rigidity_plate",
+          "color": [
+            0.250158429145813,
+            0.7011021375656128,
+            0.6514056921005249
+          ],
+          "vertexOffset": 1696032,
+          "vertexCount": 784,
+          "indexOffset": 1705440,
+          "indexCount": 4800
+        },
+        {
+          "body": 3,
+          "name": "upper_leg_right",
+          "color": [
+            0.7230557203292847,
+            0.7230557203292847,
+            0.7230557203292847
+          ],
+          "vertexOffset": 1715040,
+          "vertexCount": 2511,
+          "indexOffset": 1745172,
+          "indexCount": 15078
+        },
+        {
+          "body": 3,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1775328,
+          "vertexCount": 1950,
+          "indexOffset": 1798728,
+          "indexCount": 11736
+        },
+        {
+          "body": 2,
+          "name": "hip_l",
+          "color": [
+            0.7912985682487488,
+            0.7912985682487488,
+            0.7912985682487488
+          ],
+          "vertexOffset": 1822200,
+          "vertexCount": 2399,
+          "indexOffset": 1850988,
+          "indexCount": 14472
+        },
+        {
+          "body": 2,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1879932,
+          "vertexCount": 769,
+          "indexOffset": 1889160,
+          "indexCount": 4800
+        },
+        {
+          "body": 1,
+          "name": "yaw2roll",
+          "color": [
+            0.37626245617866516,
+            0.37626245617866516,
+            0.37626245617866516
+          ],
+          "vertexOffset": 1898760,
+          "vertexCount": 1288,
+          "indexOffset": 1914216,
+          "indexCount": 7800
+        },
+        {
+          "body": 1,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 1929816,
+          "vertexCount": 1950,
+          "indexOffset": 1953216,
+          "indexCount": 11736
+        },
+        {
+          "body": 1,
+          "name": "bearing_roll",
+          "color": [
+            0.056128453463315964,
+            0.06480330973863602,
+            0.07421369105577469
+          ],
+          "vertexOffset": 1976688,
+          "vertexCount": 792,
+          "indexOffset": 1986192,
+          "indexCount": 4800
+        },
+        {
+          "body": 1,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 1995792,
+          "vertexCount": 769,
+          "indexOffset": 2005020,
+          "indexCount": 4800
+        },
+        {
+          "body": 0,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 2014620,
+          "vertexCount": 769,
+          "indexOffset": 2023848,
+          "indexCount": 4800
+        },
+        {
+          "body": 0,
+          "name": "right_shell",
+          "color": [
+            0.6038274168968201,
+            0.6038274168968201,
+            0.6038274168968201
+          ],
+          "vertexOffset": 2033448,
+          "vertexCount": 1997,
+          "indexOffset": 2057412,
+          "indexCount": 12036
+        },
+        {
+          "body": 0,
+          "name": "banana_pcb_locker",
+          "color": [
+            0.37626245617866516,
+            0.37626245617866516,
+            0.37626245617866516
+          ],
+          "vertexOffset": 2081484,
+          "vertexCount": 692,
+          "indexOffset": 2089788,
+          "indexCount": 4164
+        },
+        {
+          "body": 0,
+          "name": "trunk_base",
+          "color": [
+            0.09989896416664124,
+            0.116970956325531,
+            0.13286833465099335
+          ],
+          "vertexOffset": 2098116,
+          "vertexCount": 790,
+          "indexOffset": 2107596,
+          "indexCount": 4800
+        },
+        {
+          "body": 0,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 2117196,
+          "vertexCount": 1950,
+          "indexOffset": 2140596,
+          "indexCount": 11736
+        },
+        {
+          "body": 0,
+          "name": "power_support",
+          "color": [
+            0.7912985682487488,
+            0.7912985682487488,
+            0.7912985682487488
+          ],
+          "vertexOffset": 2164068,
+          "vertexCount": 3041,
+          "indexOffset": 2200560,
+          "indexCount": 18342
+        },
+        {
+          "body": 0,
+          "name": "np_f970",
+          "color": [
+            0.7912985682487488,
+            0.7912985682487488,
+            0.7912985682487488
+          ],
+          "vertexOffset": 2237244,
+          "vertexCount": 7033,
+          "indexOffset": 2321640,
+          "indexCount": 42186
+        },
+        {
+          "body": 0,
+          "name": "xl330",
+          "color": [
+            0.06662617623806,
+            0.06662617623806,
+            0.06662617623806
+          ],
+          "vertexOffset": 2406012,
+          "vertexCount": 1950,
+          "indexOffset": 2429412,
+          "indexCount": 11736
+        },
+        {
+          "body": 0,
+          "name": "left_shell",
+          "color": [
+            0.6038274168968201,
+            0.6038274168968201,
+            0.6038274168968201
+          ],
+          "vertexOffset": 2452884,
+          "vertexCount": 1945,
+          "indexOffset": 2476224,
+          "indexCount": 11724
+        },
+        {
+          "body": 0,
+          "name": "seeed_bearing__configuration__22x16x4",
+          "color": [
+            0.467783123254776,
+            0.5394790172576904,
+            0.6038274168968201
+          ],
+          "vertexOffset": 2499672,
+          "vertexCount": 769,
+          "indexOffset": 2508900,
+          "indexCount": 4800
+        }
+      ]
+    },
+    "rootBody": 0,
+    "jointNames": [
+      "left_hip_yaw",
+      "left_hip_roll",
+      "left_hip_pitch",
+      "left_knee",
+      "left_ankle",
+      "neck_pitch",
+      "head_pitch",
+      "head_yaw",
+      "head_roll",
+      "right_hip_yaw",
+      "right_hip_roll",
+      "right_hip_pitch",
+      "right_knee",
+      "right_ankle"
+    ],
+    "decimation": 1,
+    "cameraRadius": 0.85,
+    "cameraHeight": 0.13,
+    "scene": "courtyard",
+    "velocityScale": [
+      0.4,
+      0.3,
+      1.0
+    ],
+    "pushMaxForce": 2.0,
+    "maxStepsPerFrame": 2,
+    "physicsDt": 0.005,
+    "physicsDecimation": 4,
+    "actuator": "native BAM",
+    "contacts": "MuJoCo Warp",
+    "cameraAzimuth": 3.5,
+    "source": {
+      "isaacLabRevision": "c47ef303990cfc117a9e0053a1a5e6864b46a513",
+      "policy": "https://huggingface.co/pollen-robotics/microduck-policies/resolve/v5/velstand.onnx",
+      "asset": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Robots/PollenRobotics/MicroDuck/microduck_allcollisions.usd",
+      "assetSha256": "e29fad565239d748086b96ba87441fb13071932ab9445d8f38dca1c176c6760c",
+      "versions": {
+        "newton": "1.7.0.dev0",
+        "warp-lang": "1.17.0",
+        "mujoco-warp": "3.14.0",
+        "newton-web": "0.1.0"
+      }
+    }
+  }
+}
