@@ -16,8 +16,8 @@ locally in the browser. The reviewed release is now served by
 ## MicroDuck prototype
 
 [Play MicroDuck walking](https://maxkra15.github.io/isaaclab-browser-demos/v2/?demo=microduck).
-Transparent Move/Turn joysticks sit inside the viewport. MicroDuck starts standing;
-drag the robot to push with 2 N and the background to orbit. Pause and reset
+Transparent Move/Turn joysticks sit inside the viewport. MicroDuck starts standing in the authored warehouse. Drag sticks to the edge
+to lock a command; pull back or press Escape to stop. Drag the robot to push with 2 N and the background to orbit. Pause and reset
 share the viewport toolbar. Physics uses native BAM servos, the published whole-body
 asset, and MJWarp contacts; the actor is Pollen Robotics' v5 `velstand.onnx`.
 
