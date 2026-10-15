@@ -59,7 +59,10 @@ uv run --no-sync python "$demo_repo/exporters/stacking.py" --output "$build_dir"
 ```
 
 Copy the beam/cloth `<name>-web/` outputs to `site/lab/browser_demos/policy-v1/<name>/`.
-Keep earlier bundles for cached previews. Other scenes use `site/lab/browser_demos/<name>/`.
+Use a new asset path and update the module and gallery-link revisions when replacing
+a bundle, so cached files do not mix with a new simulation. Remove unused bundles
+from the mutable preview; retain published version directories. Other scenes use
+`site/lab/browser_demos/<name>/`.
 Coupled control copies use a build-local Warp gather adapter because Warp 1.17
 CPU graph capture cannot record the original indexed `wp.copy`. It implements
 the same gather and restores Newton's helper after capture.

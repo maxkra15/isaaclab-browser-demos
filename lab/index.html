@@ -32,7 +32,7 @@ SPDX-License-Identifier: BSD-3-Clause
 </head>
 <body>
   <nav aria-label="Navigation">
-    <a href="./">All demos</a>
+    <a href="./?v=pretrained-vbd">All demos</a>
     <a href="https://isaac-sim.github.io/IsaacLab/">Isaac Lab documentation</a>
     <a href="https://github.com/maxkra15/isaaclab-browser-demos/tree/pages/exporters">Source and rebuild instructions</a>
   </nav>
@@ -62,7 +62,7 @@ SPDX-License-Identifier: BSD-3-Clause
         for (const item of demos.filter((value) => value.group === group)) {
           const card = document.createElement('a');
           card.className = 'card';
-          card.href = `?demo=${item.id}`;
+          card.href = `?demo=${item.id}&v=pretrained-vbd`;
           const image = document.createElement('img');
           image.src = item.preview || `${item.assetRoot || './browser_demos'}/previews/${item.id}.jpg`;
           image.alt = '';
