@@ -61,15 +61,16 @@ arm. The browser supplies step and sine targets and plots measured joint angles;
 the exported graph advances MJWarp with live per-joint implicit-drive gains.
 These bundles are under 1 MB of WebAssembly and
 need no robot asset.
-The MPM demo drops one deterministically jittered 1,728-particle block over a
+The MPM demo drops one deterministically jittered 2,744-particle block over a
 horizontal cylinder into a 1.9 m × 1.5 m catch tub with a 0.42 m rim.
 Clear walls reveal the collected material. It uses a fixed 0.1 m grid and a 60 Hz implicit MPM
 step with up to 50 Jacobi iterations. Five controls set `young_modulus`,
 `yield_pressure`, `friction`, `yield_stress`, and `hardening` on reset.
 Sand, snow, clay, and water buttons select qualitative reference materials,
 including Poisson ratio and tensile yield ratio, and restart the drop.
-The 12 × 12 × 12 lattice samples the same 0.35 m cube at a density of
-1,000 kg/m³. Displayed particle radii are 40% of the lattice spacing;
+The 14 × 14 × 14 lattice samples the same 0.35 m cube at a density of
+1,000 kg/m³. Released v1 bundles retain the original 1,728-particle lattice.
+Displayed particle radii are 40% of the lattice spacing;
 simulation radii remain 50%, so reducing the displayed grain size does not
 change the material volume. Particle projection keeps the displayed radius clear
 of the floor, cylinder and walls, including tub corners. The inner floor is at

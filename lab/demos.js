@@ -36,7 +36,8 @@ const releasedCategories = {
 const existing = releasedDemos.filter((demo) => !['ant', 'cable_bending'].includes(demo.id)).map((demo) => ({
   ...demo,
   ...releasedCategories[demo.id],
-  assetRoot: demo.id === 'mpm' ? './browser_demos/teleop-v1'
+  description: demo.id === 'mpm' ? 'Drop 2,744 fine particles onto a cylinder. Try sand, snow, clay, and water references.' : demo.description,
+  assetRoot: demo.id === 'mpm' ? './browser_demos/grains-v1'
     : demo.id === 'dominoes' ? '../v6/browser_demos' : demo.assetRoot,
 }));
 

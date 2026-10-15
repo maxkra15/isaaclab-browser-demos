@@ -72,7 +72,7 @@ SPDX-License-Identifier: BSD-3-Clause
 </head>
 <body>
   <nav aria-label="Navigation">
-    <a id="gallery-link" href="./?v=teleop-v1">Demo gallery</a>
+    <a id="gallery-link" href="./?v=grains-v1">Demo gallery</a>
     <a href="https://isaac-sim.github.io/IsaacLab/">Isaac Lab documentation</a>
     <a href="https://github.com/maxkra15/isaaclab-browser-demos/tree/pages/exporters">Source and rebuild instructions</a>
   </nav>
@@ -107,8 +107,8 @@ SPDX-License-Identifier: BSD-3-Clause
     </a>
   </template>
   <script type="module">
-    import { demos, activities, physics } from './demos.js?rev=teleop-v1';
-    const revision = 'teleop-v1';
+    import { demos, activities, physics } from './demos.js?rev=grains-v1';
+    const revision = 'grains-v1';
     const content = document.querySelector('#content');
     const params = new URLSearchParams(location.search);
     const galleryParams = new URLSearchParams(params);
@@ -121,7 +121,7 @@ SPDX-License-Identifier: BSD-3-Clause
       document.title = `${demo.title} · Isaac Lab`;
       document.querySelector('h1').textContent = demo.title;
       document.querySelector('#description').textContent = `${demo.description} Drag to orbit, scroll to zoom, and use the controls to pause or reset.`;
-      await import('./css/browser-demo.js?rev=teleop-v1');
+      await import('./css/browser-demo.js?rev=grains-v1');
       const widget = document.createElement('isaaclab-browser-demo');
       widget.setAttribute('src', `${demo.assetRoot || './browser_demos'}/${demo.id}/manifest.json`);
       content.append(widget);

@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos } from '../demos.js?rev=teleop-v1';
+import { demos } from '../demos.js?rev=grains-v1';
 
 const arrayTypes = {
   float32: [Float32Array, 'HEAPF32'], float64: [Float64Array, 'HEAPF64'],

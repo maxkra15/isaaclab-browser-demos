@@ -22,7 +22,7 @@ return from a demo. For example, `?activity=policy&physics=vbd` selects both VBD
 | Franka soft-body policy | Pretrained policy controls an MJWarp arm coupled to a VBD tetrahedral beam; stiffness, target height and bounded mouse pulling | Native `Isaac-Lift-Soft-Franka` observations, relative joint actions, actuators and contacts; published Newton checkpoint |
 | Franka cloth policy | Pretrained policy grasps and lifts a VBD sheet through hand/finger contacts; bending, target height and bounded mouse pulling | Native `Isaac-Lift-Cloth-Franka` with a compact 5 × 5 particle grid; published Newton checkpoint; 20 observed nodes as in training |
 | Franka cube stacking | Scripted contact grasp and stacking, or manual end-effector control | Contrib Franka scene with aligned 50 mm, 20 g procedural cubes and a matching tabletop collider; native Newton IK sequence |
-| MPM material response | Sand, snow, clay and water references falling into a tub | Finite particle clearance at the floor, cylinder and walls; checker ground beneath the tub base |
+| MPM material response | Sand, snow, clay and water references falling into a tub | 2,744 particles, 14% smaller radii than the initial preview, at the same block volume and density; finite contact clearance and checker ground beneath the tub base |
 
 The beam and cloth demos run their published RSL-RL actors in the browser using
 the existing MLP evaluator. The captured graph builds and normalizes all 93
@@ -103,7 +103,7 @@ from the mutable preview; retain published version directories. Other scenes use
 `site/lab/browser_demos/<name>/`.
 MPM retains the pinned Newton 1.6.0 / MuJoCo Warp 3.12.0 export toolchain in the
 export guide. Rebuild it separately and publish `mpm-web/` under
-`site/lab/browser_demos/teleop-v1/mpm/`; the lab viewer places its checker ground
+`site/lab/browser_demos/grains-v1/mpm/`; the lab viewer places its checker ground
 beneath the tub while the inner floor and collision boundary stay at z=0.
 Coupled control copies use a build-local Warp gather adapter because Warp 1.17
 CPU graph capture cannot record the original indexed `wp.copy`. It implements
