@@ -11,6 +11,11 @@ Personal experimental preview: <https://maxkra15.github.io/isaaclab-browser-demo
 It reuses the released gallery and assets. Ant is hidden here; versioned releases
 remain immutable. Only the selected simulation is loaded.
 
+The gallery filters by activity (tuning, policy inference or scripted scenes) and
+physics (rigid bodies, VBD or MPM). Categories live in `demos.js`; coupled scenes
+can have multiple physics tags. Filters combine, update the URL and survive the
+return from a demo. For example, `?activity=policy&physics=vbd` selects both VBD policies.
+
 | Scene | Physics and interaction | Preparation for this preview |
 | --- | --- | --- |
 | VBD cable bending | Clamped rod with live bending stiffness and tip load | Ten segments, 0.45 m long, 24 VBD iterations and eight substeps; actual rigid root clamp |
