@@ -121,12 +121,12 @@ def export_scene(name: str, output: Path) -> None:
         substeps = 8  # Compact CPU budget; validate cascade contacts against this native replay.
     else:
         # One cantilever uses the same native rod/VBD representation as the cable example.
-        count = 20
+        count = 10
         bodies, joints = builder.add_rod(
-            rod=newton.Rod([wp.vec3(i * 0.9 / count - 0.45, 0.0, 1.0) for i in range(count + 1)], radius=0.01),
+            rod=newton.Rod([wp.vec3(i * 0.45 / count - 0.225, 0.0, 0.7) for i in range(count + 1)], radius=0.012),
             cfg=newton.ModelBuilder.ShapeConfig(density=100.0, mu=0.6),
-            stretch_stiffness=5.0e5,
-            bend_stiffness=1.0,
+            stretch_stiffness=1.0e5,
+            bend_stiffness=0.2,
             bend_damping=0.05,
             body_frame_origin="com",
         )
@@ -139,32 +139,32 @@ def export_scene(name: str, output: Path) -> None:
             raise ValueError("Native rod stiffness layout changed")
         angular_dofs = wp.array(dofs, dtype=int, device="cpu")
         parameters = (
-            Parameter("bending", 0, "Bending stiffness [N·m/rad]", 0.001, 100.0, 0.001),
-            Parameter("load", 0, "Downward tip load [N]", 0.0, 0.5, 0.01),
+            Parameter("bending", 0, "Bending stiffness [N·m/rad]", 0.02, 10.0, 0.001),
+            Parameter("load", 0, "Downward tip load [N]", 0.0, 0.08, 0.002),
         )
         values = {
-            "bending": wp.array([1.0], dtype=float, device="cpu"),
-            "load": wp.array([0.05], dtype=float, device="cpu"),
+            "bending": wp.array([0.2], dtype=float, device="cpu"),
+            "load": wp.array([0.025], dtype=float, device="cpu"),
         }
         persistent = tuple(values)
         title, source = "VBD cable bending", "examples/cables.py"
         options = {
             "logParameters": ["bending"],
-            "cameraTarget": [0, 0.6, 0],
-            "cameraRadius": 2.25,
+            "cameraTarget": [0, 0.38, 0],
+            "cameraRadius": 1.6,
             "cameraAzimuth": math.pi / 2,
-            "cameraElevation": 0.1,
+            "cameraElevation": 0.08,
         }
         colors = ["#268a83"] * count
         substeps = 8
     builder.add_ground_plane(cfg=newton.ModelBuilder.ShapeConfig(mu=1.0, restitution=0.15))
     builder.color()
     model = builder.finalize(device="cpu")
-    iterations = 10 if name == "dominoes" else 20
+    iterations = 10 if name == "dominoes" else 24
     solver = (
         newton.solvers.SolverXPBD(model, iterations=iterations, enable_restitution=True)
         if name == "dominoes"
-        else newton.solvers.SolverVBD(model, iterations=20, rigid_compliant_alm=False)
+        else newton.solvers.SolverVBD(model, iterations=iterations, rigid_compliant_alm=False)
     )
     pipeline = newton.CollisionPipeline(model, broad_phase="explicit")
     contacts = pipeline.contacts()
@@ -232,16 +232,19 @@ def export_scene(name: str, output: Path) -> None:
             {
                 "type": "capsule",
                 "body": int(body),
-                "radius": 0.01,
-                "length": 0.9 / count,
+                "radius": 0.012,
+                "length": 0.45 / count,
                 "transform": [0, 0, 0, 0, 0, 0, 1],
                 "color": colors[index],
             }
             for index, body in enumerate(bodies)
         ]
         options["fixtures"] = [
-            {"type": "box", "size": [0.08, 0.12, 0.16], "transform": [-0.45, 0, 0.98, 0, 0, 0, 1], "color": "#51626a"}
+            {"type": "box", "size": [0.065, 0.09, 0.11], "transform": [-0.225, 0, 0.7, 0, 0, 0, 1], "color": "#51626a"},
+            {"type": "box", "size": [0.035, 0.04, 0.62], "transform": [-0.225, 0.025, 0.345, 0, 0, 0, 1], "color": "#687b84"},
+            {"type": "box", "size": [0.18, 0.18, 0.035], "transform": [-0.225, 0.025, 0.0175, 0, 0, 0, 1], "color": "#51626a"},
         ]
+
     manifest["isaacLabDemo"] = {
         "kind": name,
         "title": title,
