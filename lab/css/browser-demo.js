@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos } from '../demos.js';
+import { demos } from '../demos.js?rev=pretrained-vbd';
 
 const arrayTypes = {
   float32: [Float32Array, 'HEAPF32'], float64: [Float64Array, 'HEAPF64'],
@@ -222,7 +222,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       } else if (!['stiffness', 'cloth_bending', 'mpm'].includes(this.demo.kind)) {
         const [{ RobotViewer }, policy] = await Promise.all([
-          import('./robot-viewer.js'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
+          import('./robot-viewer.js?rev=pretrained-vbd'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;

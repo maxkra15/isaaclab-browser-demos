@@ -15,15 +15,15 @@ locally in the browser. The reviewed release is now served by
 
 ## Deformable lab
 
-The mutable [lab preview](lab/README.md) adds a shorter, settled VBD cable,
-a Franka contact grasp of a flexible beam, a VBD cloth lifted with an explicit
-corner clip, and contrib cube stacking with a contact grasp. The Franka scenes
-use scripted Newton IK. Change the material or target, release early, or pull
-the deformable with the mouse. Pause and reset are available in every scene.
+The mutable [lab preview](lab/README.md) runs the published RSL-RL policies for
+Franka VBD beam and cloth lifting. Both use native contact grasps. Change the
+material or target height, open the gripper, or pull the deformable with the mouse.
+The shorter cable demonstrates bending, and contrib cube stacking uses scripted
+Newton IK. Pause and reset are available in every scene.
 Ant is hidden from this preview. These prototypes do not change the official
 Isaac Lab gallery or PRs.
 
-![Franka soft-body grasp](lab/browser_demos/previews/franka_soft.jpg)
+![Franka soft-body policy](lab/browser_demos/policy-v1/previews/franka_soft.jpg)
 
 ## MicroDuck prototype
 

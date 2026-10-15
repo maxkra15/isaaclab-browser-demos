@@ -14,18 +14,25 @@ remain immutable. Only the selected simulation is loaded.
 | Scene | Physics and interaction | Preparation for this preview |
 | --- | --- | --- |
 | VBD cable bending | Clamped rod with live bending stiffness and tip load | Ten segments, 0.45 m long, 24 VBD iterations and eight substeps; actual rigid root clamp |
-| Franka soft-body grasp | MJWarp arm coupled to a VBD tetrahedral beam; stiffness, lift height, release and bounded mouse pulling | Native `Isaac-Lift-Soft-Franka`, original coarse refinement, deterministic initial joints, gravity compensation, Newton IK trajectory |
-| Franka cloth clip | MJWarp arm and VBD sheet; bending, lift height, release and bounded mouse pulling | Native `Isaac-Lift-Cloth-Franka` scene with a 5 × 5 particle grid and three vertices prescribed relative to the hand; hand/cloth contacts and reaction feedback omitted around the clip; support contacts remain |
+| Franka soft-body policy | Pretrained policy controls an MJWarp arm coupled to a VBD tetrahedral beam; stiffness, target height and bounded mouse pulling | Native `Isaac-Lift-Soft-Franka` observations, relative joint actions, actuators and contacts; published Newton checkpoint |
+| Franka cloth policy | Pretrained policy grasps and lifts a VBD sheet through hand/finger contacts; bending, target height and bounded mouse pulling | Native `Isaac-Lift-Cloth-Franka` with a compact 5 × 5 particle grid; published Newton checkpoint; 20 observed nodes as in training |
 | Franka cube stacking | Native contrib scene; contact grasp, placement X/Y and early release | `IsaacContrib-Stack-Cube-Franka`, MuJoCo asset variant, one-world clone plan, unused frame sensor/observations omitted, Newton IK trajectory |
 
-The Franka demos use scripted IK, not trained policies or recorded animation.
-All bodies and deformables advance in the captured Newton solvers. The cloth
-clip is an explicit one-way boundary condition, not a validated free grasp.
+The beam and cloth demos run their published RSL-RL actors in the browser using
+the existing MLP evaluator. The captured graph builds and normalizes all 93
+observations, applies the eight actions and advances native physics. Both grasp
+through contacts; the cloth has no attachment. Cube stacking still uses scripted IK.
 Visual bench legs are decorative; the native support collider is unchanged.
 Mouse pulling adds a spring force capped at 2 N; it does not edit particle poses.
+Open gripper temporarily overrides the learned gripper target; Policy grip returns
+control to the actor. Changing the material tests policy generalization, not
+performance on its original training distribution.
 
-Physics stays at 120 Hz with two substeps for deformables. Their renderer runs
-at 30 Hz to leave CPU time for physics. Playback speed still depends on the device.
+Physics stays at 120 Hz with two substeps for deformables. Each captured control
+step includes four physics steps and one 30 Hz policy decision. Relative arm targets
+are reapplied at each native action boundary, preserving the task's update schedule.
+The five-second training horizon repeats. Rendering runs at up to 30 Hz; playback
+speed still depends on the device.
 The beam uses the native coarse tetrahedralization; more vertices materially
 increase the browser CPU cost. Published meshes are fixed in each bundle.
 
@@ -42,23 +49,34 @@ export PYTHONPATH=/path/to/newton-web/src:/path/to/IsaacLab/source/isaaclab_tele
 demo_repo=/path/to/isaaclab-browser-demos
 build_dir=/tmp/isaaclab-browser-lab
 emxx=/path/to/emsdk/upstream/emscripten/em++
+checkpoint_root=https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/PretrainedCheckpoints/rsl_rl
+curl -fL "$checkpoint_root/Isaac-Lift-Soft-Franka_newtonmjwarpvbdproxy_none_rsl_rl.pt" -o /tmp/vbd-soft.pt
+curl -fL "$checkpoint_root/Isaac-Lift-Cloth-Franka_newtonmjwarpvbdproxy_none_rsl_rl.pt" -o /tmp/vbd-cloth.pt
 uv run --no-sync python "$demo_repo/exporters/scenes.py" cable_bending --output "$build_dir" --emxx "$emxx"
-uv run --no-sync --with 'pytetwild[all]>=0.3,<0.4' python "$demo_repo/exporters/deformable.py" soft --output "$build_dir" --emxx "$emxx"
-uv run --no-sync python "$demo_repo/exporters/deformable.py" cloth --output "$build_dir" --emxx "$emxx"
+uv run --no-sync --with 'pytetwild[all]>=0.3,<0.4' python "$demo_repo/exporters/deformable.py" soft --checkpoint /tmp/vbd-soft.pt --output "$build_dir" --emxx "$emxx"
+uv run --no-sync python "$demo_repo/exporters/deformable.py" cloth --checkpoint /tmp/vbd-cloth.pt --output "$build_dir" --emxx "$emxx"
 uv run --no-sync python "$demo_repo/exporters/stacking.py" --output "$build_dir" --emxx "$emxx"
 ```
 
-Copy each resulting `<name>-web/` to `site/lab/browser_demos/<name>/`.
+Copy the beam/cloth `<name>-web/` outputs to `site/lab/browser_demos/policy-v1/<name>/`.
+Keep earlier bundles for cached previews. Other scenes use `site/lab/browser_demos/<name>/`.
 Coupled control copies use a build-local Warp gather adapter because Warp 1.17
 CPU graph capture cannot record the original indexed `wp.copy`. It implements
 the same gather and restores Newton's helper after capture.
 
-Exports fail if positions or velocities become non-finite, the default beam or
-cloth lift is not held through 14 seconds, or the default cube stack fails.
-Native sparse checkpoints cover approach, grasp, lift and hold. `validation.json`
+Checkpoint hashes and layer widths are pinned in the exporter. Exports compare
+the observation/action adapters to the actual task managers through a native
+policy rollout. Float32 operation order and relative-target update boundaries
+match the task. They fail if the default policy cannot lift, positions/velocities
+become non-finite, or CPU capture differs from eager playback by more than 1 μm.
+Native trajectory references cover approach, grasp, lift and hold. `validation.json`
 records hashes of the exact browser files associated with `reference.npz`;
 keep those build artifacts together when comparing native and WASM execution.
 Tetrahedralization is not guaranteed to reproduce an identical mesh on rebuild.
+Browser checks verify the actor output, observation formula on the browser's own
+state, and learned lifting/tracking with closed-loop inference. Contact trajectories
+can diverge between native CPU and WASM due to floating-point differences;
+full per-particle equality after grasp is not a suitable cross-platform gate.
 In a browser, also verify pause/reset, slider persistence, early release,
 mouse picking and blur/cancel cleanup, material endpoints, and playback speed.
 
@@ -71,4 +89,4 @@ mouse picking and blur/cancel cleanup, material endpoints, and playback speed.
 | Factory / assembly | Backend-specific contacts and task controllers need a separate port; no browser parity has been established |
 
 These are source reviews, not claims that those tasks currently export. The
-small stack and native VBD lift scenes are the first validated additions here.
+small stack and native VBD policy scenes are the first validated additions here.

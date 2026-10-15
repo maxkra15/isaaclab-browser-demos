@@ -41,7 +41,7 @@ SPDX-License-Identifier: BSD-3-Clause
   <main id="content"></main>
   <footer>Experimental preview · Compact Newton scenes. Iterating here before proposing documentation changes.</footer>
   <script type="module">
-    import { demos } from './demos.js';
+    import { demos } from './demos.js?rev=pretrained-vbd';
     const content = document.querySelector('#content');
     const selected = new URLSearchParams(location.search).get('demo');
     const demo = demos.find((item) => item.id === selected);
@@ -49,7 +49,7 @@ SPDX-License-Identifier: BSD-3-Clause
       document.title = `${demo.title} · Isaac Lab`;
       document.querySelector('h1').textContent = demo.title;
       document.querySelector('#description').textContent = `${demo.description} Drag to orbit, scroll to zoom, and use the controls to pause or reset.`;
-      await import('./css/browser-demo.js');
+      await import('./css/browser-demo.js?rev=pretrained-vbd');
       const widget = document.createElement('isaaclab-browser-demo');
       widget.setAttribute('src', `${demo.assetRoot || './browser_demos'}/${demo.id}/manifest.json`);
       content.append(widget);

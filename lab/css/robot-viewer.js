@@ -78,7 +78,8 @@ export class RobotViewer {
       this.isManipulation ? 0.45 : 0.28, this.demo.cameraRadius || (this.isAnymal ? 2.4 : 3.0));
 
     const microduck = this.demo.kind === 'microduck';
-    const workbench = this.isManipulation && !this.demo.policy;
+    this.workbench = this.demo.scene === 'workbench' || (this.isManipulation && !this.demo.policy);
+    const workbench = this.workbench;
     this.scene.add(new THREE.HemisphereLight('#ffffff', '#acb9be', microduck ? 1.3 : 2.2));
     const key = new THREE.DirectionalLight('#ffffff', microduck ? 2.5 : 3.0);
     key.position.set(3, 5, 4);
@@ -170,7 +171,7 @@ export class RobotViewer {
       return mesh;
     });
     if (this.demo.softDrag) this.addSoftDrag();
-    if (this.demo.commandRange) {
+    if (this.demo.commandRange || this.demo.showTarget) {
       const geometry = new THREE.SphereGeometry(0.025, 20, 12);
       const material = new THREE.MeshStandardMaterial({ color: '#76b900', emissive: '#3a6000', transparent: true, opacity: 0.8 });
       this.goal = new THREE.Mesh(geometry, material);
@@ -409,7 +410,7 @@ export class RobotViewer {
     } else this.target.set(pose[root], this.demo.cameraHeight ?? (this.isAnymal ? 0.6 : 0.71), -pose[root + 1]);
     if (this.pushArrow) this.pushArrow.position.set(pose[root], pose[root + 2] + 0.03, -pose[root + 1]);
     this.key.position.set(pose[root] + 3, 5, -pose[root + 1] + 4);
-    this.key.target.position.set(pose[root] + (this.isManipulation && !this.demo.policy ? 0.45 : 0), 0, -pose[root + 1]);
+    this.key.target.position.set(pose[root] + (this.workbench ? 0.45 : 0), 0, -pose[root + 1]);
     this.key.target.updateMatrixWorld();
     this.orbit.update(this.target);
     this.renderer.render(this.scene, this.camera);
