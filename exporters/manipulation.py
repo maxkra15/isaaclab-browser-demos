@@ -374,7 +374,11 @@ def _pack_visuals(stage: Usd.Stage, roots: list[str], bodies: list[str], output:
             body = max(parents)[1] if parents else -1
             transform = cache.GetLocalToWorldTransform(prim)
             if body >= 0:
-                transform *= cache.GetLocalToWorldTransform(stage.GetPrimAtPath(bodies[body])).GetInverse()
+                # Newton's body pose has no scale. Retain authored body scaling
+                # in mesh vertices, including the contrib task's scaled cubes.
+                transform *= (
+                    cache.GetLocalToWorldTransform(stage.GetPrimAtPath(bodies[body])).RemoveScaleShear().GetInverse()
+                )
             matrix = np.asarray(transform, dtype=np.float64)
             vertices = (geometry.vertices @ matrix[:3, :3] + matrix[3, :3]).astype("<f4")
             material, _ = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()

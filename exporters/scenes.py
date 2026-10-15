@@ -241,8 +241,18 @@ def export_scene(name: str, output: Path) -> None:
         ]
         options["fixtures"] = [
             {"type": "box", "size": [0.065, 0.09, 0.11], "transform": [-0.225, 0, 0.7, 0, 0, 0, 1], "color": "#51626a"},
-            {"type": "box", "size": [0.035, 0.04, 0.62], "transform": [-0.225, 0.025, 0.345, 0, 0, 0, 1], "color": "#687b84"},
-            {"type": "box", "size": [0.18, 0.18, 0.035], "transform": [-0.225, 0.025, 0.0175, 0, 0, 0, 1], "color": "#51626a"},
+            {
+                "type": "box",
+                "size": [0.035, 0.04, 0.62],
+                "transform": [-0.225, 0.025, 0.345, 0, 0, 0, 1],
+                "color": "#687b84",
+            },
+            {
+                "type": "box",
+                "size": [0.18, 0.18, 0.035],
+                "transform": [-0.225, 0.025, 0.0175, 0, 0, 0, 1],
+                "color": "#51626a",
+            },
         ]
 
     manifest["isaacLabDemo"] = {

@@ -5,7 +5,7 @@
 
 import * as THREE from '../../v1/vendor/three.module.min.js';
 import { addIsaacLabGround } from '../../v1/css/browser-ground.js';
-import { OrbitCamera } from './browser-orbit.js';
+import { OrbitCamera } from '../../v6/css/browser-orbit.js';
 
 export class RobotViewer {
   static async load(canvas, simulation) {
@@ -78,20 +78,21 @@ export class RobotViewer {
       this.isManipulation ? 0.45 : 0.28, this.demo.cameraRadius || (this.isAnymal ? 2.4 : 3.0));
 
     const microduck = this.demo.kind === 'microduck';
+    const workbench = this.isManipulation && !this.demo.policy;
     this.scene.add(new THREE.HemisphereLight('#ffffff', '#acb9be', microduck ? 1.3 : 2.2));
     const key = new THREE.DirectionalLight('#ffffff', microduck ? 2.5 : 3.0);
     key.position.set(3, 5, 4);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
-    const shadowExtent = microduck ? 0.75 : 2.5;
+    const shadowExtent = microduck ? 0.75 : workbench ? 1.4 : 2.5;
     key.shadow.camera.left = -shadowExtent;
     key.shadow.camera.right = shadowExtent;
     key.shadow.camera.top = shadowExtent;
     key.shadow.camera.bottom = -shadowExtent;
     key.shadow.camera.near = 0.1;
     key.shadow.camera.far = 12;
-    key.shadow.bias = microduck ? -0.000005 : -0.0001;
-    key.shadow.normalBias = microduck ? 0.0003 : 0;
+    key.shadow.bias = workbench ? 0.0001 : microduck ? -0.000005 : -0.0001;
+    key.shadow.normalBias = workbench ? 0.005 : microduck ? 0.0003 : 0;
     this.key = key;
     this.scene.add(key);
     this.scene.add(key.target);
@@ -379,6 +380,13 @@ export class RobotViewer {
     }
     if (this.softMeshes.length) {
       const particles = this.simulation.binding('particle_q');
+      for (const name of ['particle_q', 'particle_qd', 'body_qd']) {
+        if (!this.simulation.binding(name).every(Number.isFinite)) throw new Error('Non-finite simulation state; reset to continue');
+      }
+      if (particles.some((value) => Math.abs(value) > 10)
+          || this.simulation.binding('particle_qd').some((value) => Math.abs(value) > 100)) {
+        throw new Error('Object left the interactive range; reset to continue');
+      }
       for (const mesh of this.softMeshes) {
         const attribute = mesh.geometry.attributes.position;
         mesh.userData.particles.forEach((index, local) => {
@@ -401,7 +409,7 @@ export class RobotViewer {
     } else this.target.set(pose[root], this.demo.cameraHeight ?? (this.isAnymal ? 0.6 : 0.71), -pose[root + 1]);
     if (this.pushArrow) this.pushArrow.position.set(pose[root], pose[root + 2] + 0.03, -pose[root + 1]);
     this.key.position.set(pose[root] + 3, 5, -pose[root + 1] + 4);
-    this.key.target.position.set(pose[root], 0, -pose[root + 1]);
+    this.key.target.position.set(pose[root] + (this.isManipulation && !this.demo.policy ? 0.45 : 0), 0, -pose[root + 1]);
     this.key.target.updateMatrixWorld();
     this.orbit.update(this.target);
     this.renderer.render(this.scene, this.camera);

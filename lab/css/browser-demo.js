@@ -196,7 +196,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.querySelector('.browser-demo-head strong').textContent = title;
       this.canvas.setAttribute('aria-label', `${title} interactive simulation`);
       if (this.demo.viewer === 'rigid' || this.demo.kind === 'rigid_friction' || this.demo.kind === 'joint_pd') {
-        const { RigidViewer } = await import('./rigid-viewer.js');
+        const { RigidViewer } = await import('../../v6/css/rigid-viewer.js');
         const viewer = await RigidViewer.load(this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
@@ -258,6 +258,12 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewport.append(hint);
       }
       this.setupControls();
+      if (this.demo.boundaryNote) {
+        const note = document.createElement('small');
+        note.className = 'browser-demo-boundary-note';
+        note.textContent = this.demo.boundaryNote;
+        this.append(note);
+      }
       this.running = true;
       this.previousTime = performance.now();
       this.status.textContent = 'Running in your browser';
@@ -904,7 +910,10 @@ class IsaacLabBrowserDemo extends HTMLElement {
         }
         if (!resetDuringFrame) this.elapsed -= steps * this.simulation.manifest.timestep;
       }
-      this.render();
+      if (!this.demo.renderFPS || time - (this.lastRenderTime || 0) >= 1000 / this.demo.renderFPS) {
+        this.render();
+        this.lastRenderTime = time;
+      }
       this.previousTime = time;
       this.frameId = requestAnimationFrame((next) => this.frame(next));
     } catch (error) {

@@ -11,7 +11,19 @@ Prototype hosting for interactive Newton demos. Physics and policy inference run
 locally in the browser. The reviewed release is now served by
 [Isaac Lab documentation](https://isaac-sim.github.io/IsaacLab/demos/v1/).
 
-[Open the prototype gallery](https://maxkra15.github.io/isaaclab-browser-demos/v2/).
+[Open the prototype gallery](https://maxkra15.github.io/isaaclab-browser-demos/lab/).
+
+## Deformable lab
+
+The mutable [lab preview](lab/README.md) adds a shorter, settled VBD cable,
+a Franka contact grasp of a flexible beam, a VBD cloth lifted with an explicit
+corner clip, and contrib cube stacking with a contact grasp. The Franka scenes
+use scripted Newton IK. Change the material or target, release early, or pull
+the deformable with the mouse. Pause and reset are available in every scene.
+Ant is hidden from this preview. These prototypes do not change the official
+Isaac Lab gallery or PRs.
+
+![Franka soft-body grasp](lab/browser_demos/previews/franka_soft.jpg)
 
 ## MicroDuck prototype
 
