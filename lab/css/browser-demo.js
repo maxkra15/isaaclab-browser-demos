@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos } from '../demos.js?rev=pretrained-vbd';
+import { demos } from '../demos.js?rev=teleop-v1';
 
 const arrayTypes = {
   float32: [Float32Array, 'HEAPF32'], float64: [Float64Array, 'HEAPF64'],
@@ -222,7 +222,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       } else if (!['stiffness', 'cloth_bending', 'mpm'].includes(this.demo.kind)) {
         const [{ RobotViewer }, policy] = await Promise.all([
-          import('./robot-viewer.js?rev=pretrained-vbd'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
+          import('./robot-viewer.js?rev=teleop-v1'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;
@@ -237,17 +237,28 @@ class IsaacLabBrowserDemo extends HTMLElement {
           this.previousAction = new Float32Array(this.demo.actionIndices?.length || this.demo.jointNames.length);
         }
       } else {
-        const { StiffnessViewer } = await import('../../v1/css/stiffness-viewer.js');
-        const viewer = await StiffnessViewer.load(this.canvas, this.simulation);
+        const Viewer = this.demo.kind === 'mpm'
+          ? (await import('./mpm-viewer.js?rev=teleop-v1')).MpmViewer
+          : (await import('../../v1/css/stiffness-viewer.js')).StiffnessViewer;
+        const viewer = await Viewer.load(this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
           return;
         }
         this.viewer = viewer;
       }
+      if (this.isManipulation) {
+        const { FrankaControl } = await import('./franka-control.js?rev=teleop-v1');
+        const source = new URL(demos.find((item) => item.id === this.demo.kind).manualControl, new URL('../', import.meta.url));
+        const control = await FrankaControl.load(this.simulation, source);
+        if (this.generation !== generation) return;
+        this.franka = control;
+        this.controlMode = this.policy ? 'policy' : 'scripted';
+        this.settleFranka();
+      }
       this.tick = 0;
       this.elapsed = 0;
-      if (this.demo.softDrag) {
+      if (this.demo.softDrag || this.franka) {
         this.viewport = document.createElement('div');
         this.viewport.className = 'browser-demo-viewport';
         this.canvas.before(this.viewport);
@@ -255,7 +266,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         const hint = document.createElement('small');
         hint.className = 'browser-demo-viewer-hint';
         hint.textContent = 'Drag the object to pull · Drag the scene to orbit';
-        this.viewport.append(hint);
+        if (!this.franka) this.viewport.append(hint);
       }
       this.setupControls();
       if (this.demo.boundaryNote) {
@@ -263,6 +274,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         note.className = 'browser-demo-boundary-note';
         note.textContent = this.demo.boundaryNote;
         this.append(note);
+        this.boundaryNote = note;
       }
       this.running = true;
       this.previousTime = performance.now();
@@ -291,7 +303,9 @@ class IsaacLabBrowserDemo extends HTMLElement {
 
   setupControls() {
     const panel = this.querySelector('.browser-demo-controls');
-    if (this.demo.controls === 'parameters') {
+    if (this.franka) {
+      this.setupFrankaControls(panel);
+    } else if (this.demo.controls === 'parameters') {
       for (const parameter of this.simulation.manifest.parameters) {
         const logarithmic = this.demo.logParameters?.includes(parameter.binding);
         const physical = (value) => logarithmic ? 10 ** value : value;
@@ -445,18 +459,6 @@ class IsaacLabBrowserDemo extends HTMLElement {
       hint.textContent = 'Hold to perturb the cart. Release to see the policy respond.';
       forceCard.append(hint);
       panel.append(forceCard);
-    } else if (this.isManipulation) {
-      if (this.demo.commandRange) {
-        const command = this.simulation.binding('command');
-        for (const [axis, label] of ['Target x [m]', 'Target y [m]', 'Target height [m]'].entries()) {
-          const [min, max] = this.demo.commandRange[axis];
-          this.addSlider(panel, label, min, max, 0.01, command[axis],
-            (value) => { this.simulation.binding('command')[axis] = value; this.render(); });
-        }
-      }
-      this.policyReadout = document.createElement('small');
-      this.policyReadout.className = 'browser-demo-material-hint';
-      panel.append(this.policyReadout);
     } else {
       this.addVelocityControls();
     }
@@ -469,6 +471,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
     pause.title = 'Pause simulation';
     pause.addEventListener('click', () => {
       this.running = !this.running;
+      if (this.franka && !this.running) this.franka.stop();
       pause.textContent = this.running ? 'Pause' : 'Play';
       pause.title = `${pause.textContent} simulation`;
       pause.setAttribute('aria-label', pause.title);
@@ -488,6 +491,172 @@ class IsaacLabBrowserDemo extends HTMLElement {
     });
     buttons.append(pause, reset);
     (this.viewport || panel).append(buttons);
+  }
+
+  setupFrankaControls(panel) {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'browser-demo-franka-mode';
+    toolbar.setAttribute('role', 'group');
+    toolbar.setAttribute('aria-label', 'Arm controller');
+    this.modeButtons = [];
+    for (const mode of [this.policy ? 'policy' : 'scripted', 'manual']) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = mode[0].toUpperCase() + mode.slice(1);
+      button.title = mode === 'manual' ? 'Control the end effector with keyboard IK'
+        : mode === 'scripted' ? 'Restart the stacking sequence' : 'Let the pretrained policy take control';
+      button.addEventListener('click', () => {
+        if (this.controlMode === mode) return;
+        this.controlMode = mode;
+        if (mode === 'scripted') this.resetSimulation();
+        else if (mode === 'manual') this.franka.takeover();
+        else { this.franka.keys.clear(); this.tick = 0; }
+        if (this.simulation.manifest.bindings.release) this.simulation.binding('release')[0] = 0;
+        this.updateFrankaControls();
+        if (mode === 'manual') this.canvas.focus({ preventScroll: true });
+        this.render();
+      });
+      toolbar.append(button);
+      this.modeButtons.push({ mode, button });
+    }
+    this.viewport.append(toolbar);
+    this.canvas.tabIndex = 0;
+    this.viewport.addEventListener('pointerdown', (event) => {
+      if (event.target === this.canvas && this.controlMode === 'manual') this.canvas.focus({ preventScroll: true });
+    });
+    this.frankaHelp = document.createElement('small');
+    this.frankaHelp.className = 'browser-demo-franka-help';
+    this.viewport.append(this.frankaHelp);
+    this.gripButton = document.createElement('button');
+    this.gripButton.type = 'button';
+    this.gripButton.className = 'browser-demo-franka-grip';
+    this.gripLabel = document.createElement('span');
+    const shortcut = document.createElement('kbd');
+    shortcut.className = 'browser-demo-franka-shortcut';
+    shortcut.textContent = 'G';
+    this.gripButton.append(this.gripLabel, shortcut);
+    this.gripButton.setAttribute('aria-keyshortcuts', 'G');
+    this.gripButton.addEventListener('click', () => {
+      this.franka.gripOpen = !this.franka.gripOpen;
+      this.updateFrankaControls();
+    });
+    this.viewport.append(this.gripButton);
+    const keys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyR', 'KeyF', 'KeyQ', 'KeyE',
+      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight', 'KeyG', 'Escape']);
+    this.viewport.addEventListener('keydown', (event) => {
+      if (this.controlMode !== 'manual' || !keys.has(event.code)) return;
+      event.preventDefault();
+      if (event.code === 'Escape') this.franka.stop();
+      else if (event.code === 'KeyG') {
+        if (!event.repeat && this.franka.description.gripper !== 'none') this.franka.gripOpen = !this.franka.gripOpen;
+        this.updateFrankaControls();
+      } else if (this.running) this.franka.keys.add(event.code);
+    });
+    this.viewport.addEventListener('keyup', (event) => {
+      if (this.franka.release(event.code)) event.preventDefault();
+    });
+    this.viewport.addEventListener('focusout', (event) => {
+      if (!this.viewport.contains(event.relatedTarget)) this.releaseControls();
+    });
+    this.frankaPad = document.createElement('div');
+    this.frankaPad.className = 'browser-demo-franka-pad';
+    this.frankaPad.setAttribute('role', 'group');
+    this.frankaPad.setAttribute('aria-label', 'Hold to move the end effector');
+    for (const [code, label, title] of [
+      ['KeyA', '←', 'Move left'], ['KeyW', '↑', 'Move away from the camera'], ['KeyD', '→', 'Move right'],
+      ['KeyF', 'Down', 'Lower the gripper'], ['KeyS', '↓', 'Move toward the camera'], ['KeyR', 'Up', 'Raise the gripper'],
+    ]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.key = code;
+      button.textContent = label;
+      button.setAttribute('aria-label', title);
+      button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        if (this.running) this.franka.keys.add(code);
+        button.setPointerCapture(event.pointerId);
+      });
+      for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        button.addEventListener(name, () => this.franka.release(code));
+      }
+      this.frankaPad.append(button);
+    }
+    this.viewport.append(this.frankaPad);
+    this.resetSticks = () => this.franka.keys.clear();
+    this.releaseControls = () => {
+      this.franka.keys.clear();
+      if (this.ready && !this.failed) this.franka.stop();
+    };
+    window.addEventListener('blur', this.releaseControls);
+
+    this.frankaAutoSettings = document.createElement('div');
+    this.frankaAutoSettings.className = 'browser-demo-franka-settings';
+    if (this.demo.commandRange) {
+      const heading = document.createElement('strong');
+      heading.textContent = 'Policy target';
+      this.frankaAutoSettings.append(heading);
+      for (const [axis, label] of ['Target x [m]', 'Target y [m]', 'Target height [m]'].entries()) {
+        const [min, max] = this.demo.commandRange[axis];
+        this.addSlider(this.frankaAutoSettings, label, min, max, .01, this.simulation.binding('command')[axis],
+          (value) => { this.simulation.binding('command')[axis] = value; this.render(); });
+      }
+    }
+    for (const parameter of this.simulation.manifest.parameters || []) {
+      let container = this.frankaAutoSettings;
+      if (parameter.binding === 'material') {
+        const details = document.createElement('details');
+        details.className = 'browser-demo-franka-material';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Material settings';
+        details.append(summary);
+        panel.append(details);
+        container = document.createElement('div');
+        details.append(container);
+      }
+      const logarithmic = this.demo.logParameters?.includes(parameter.binding);
+      const physical = (value) => logarithmic ? 10 ** value : value;
+      this.addSlider(container, parameter.label, logarithmic ? Math.log10(parameter.minimum) : parameter.minimum,
+        logarithmic ? Math.log10(parameter.maximum) : parameter.maximum, logarithmic ? .01 : parameter.step,
+        logarithmic ? Math.log10(this.simulation.binding(parameter.binding)[parameter.index]) : this.simulation.binding(parameter.binding)[parameter.index],
+        (value) => { this.simulation.binding(parameter.binding)[parameter.index] = physical(value); },
+        (value) => Number(physical(value)).toPrecision(3));
+    }
+    if (this.frankaAutoSettings.children.length) panel.prepend(this.frankaAutoSettings);
+    this.frankaPanel = panel;
+    this.updateFrankaControls();
+  }
+
+  settleFranka() {
+    this.franka.takeover();
+    // Move out of the legacy drawer reset overlap using the same IK and physics,
+    // before displaying the scene. Never overwrite joint or rigid-body poses.
+    for (const [index, axis] of ['x', 'y', 'z'].entries()) this.franka.target[axis] += this.franka.description.homeOffset[index];
+    for (let i = 0; i < this.franka.description.settleSteps; i++) {
+      this.franka.step(this.viewer.camera, this.simulation.manifest.timestep);
+      this.simulation.step();
+    }
+    this.franka.takeover();
+  }
+
+  updateFrankaControls() {
+    const manual = this.controlMode === 'manual';
+    const gripper = this.franka.description.gripper !== 'none';
+    this.viewport.dataset.controlMode = this.controlMode;
+    for (const { mode, button } of this.modeButtons) button.setAttribute('aria-pressed', String(mode === this.controlMode));
+    this.gripButton.hidden = !manual || !gripper;
+    this.gripLabel.textContent = `${this.franka.gripOpen ? 'Close' : 'Open'} gripper`;
+    this.gripButton.setAttribute('aria-label', this.gripLabel.textContent);
+    this.frankaPad.hidden = !manual;
+    this.frankaAutoSettings.hidden = manual;
+    this.frankaPanel.hidden = !this.frankaPanel.children.length
+      || (manual && !this.frankaPanel.querySelector('.browser-demo-franka-material'));
+    this.frankaHelp.textContent = manual
+      ? 'WASD / arrows move · R/F height · Q/E turn · Shift precision · Esc stop'
+      : this.demo.softDrag ? 'Drag the object to pull · Drag the scene to orbit' : 'Drag to orbit · Scroll to zoom';
+    this.viewer.manualTarget = manual ? this.franka.target : null;
+    if (this.boundaryNote) this.boundaryNote.textContent = manual
+      ? 'Manual control · Keyboard or touch · Live contact physics' : this.demo.boundaryNote;
+    if (this.franka.description.modeBinding) this.simulation.binding(this.franka.description.modeBinding)[0] = Number(manual);
   }
 
   setupJointPdControls(panel) {
@@ -564,6 +733,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.resetSticks?.();
     this.tick = 0;
     this.elapsed = 0;
+    if (this.franka) { this.settleFranka(); this.updateFrankaControls(); }
     if (this.demo.kind === 'joint_pd') {
       this.plot.reset();
       this.updateJointPdTarget();
@@ -784,6 +954,13 @@ class IsaacLabBrowserDemo extends HTMLElement {
     return { reset, move, show };
   }
 
+  applyController() {
+    if (this.franka && this.controlMode === 'manual') this.franka.step(this.viewer.camera, this.simulation.manifest.timestep);
+    else if (this.policy && this.tick % this.demo.decimation === 0) {
+      this.demo.kind === 'cartpole' ? this.applyCartpolePolicy() : this.applyPolicy();
+    }
+  }
+
   applyPolicy() {
     if (this.isManipulation || this.demo.policyType === 'microduck' || this.demo.policyType === 'captured') {
       const observation = this.simulation.binding('observation');
@@ -883,9 +1060,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         const steps = Math.min(maxSteps, Math.floor(this.elapsed / this.simulation.manifest.timestep));
         let resetDuringFrame = false;
         for (let index = 0; index < steps; index += 1) {
-          if (this.policy && this.tick % this.demo.decimation === 0) {
-            this.demo.kind === 'cartpole' ? this.applyCartpolePolicy() : this.applyPolicy();
-          }
+          this.applyController();
           if (this.demo.kind === 'joint_pd') this.updateJointPdTarget();
           this.simulation.step();
           this.tick += 1;
@@ -896,7 +1071,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
           }
           const fallen = this.demo.terminationHeight !== undefined
             && !(this.simulation.binding('body_q')[this.demo.rootBody * 7 + 2] >= this.demo.terminationHeight);
-          if ((this.demo.cycleSteps && this.tick >= this.demo.cycleSteps) || fallen) {
+          if ((this.controlMode !== 'manual' && this.demo.cycleSteps && this.tick >= this.demo.cycleSteps) || fallen) {
             this.resetSimulation();
             resetDuringFrame = true;
             break;
@@ -928,18 +1103,6 @@ class IsaacLabBrowserDemo extends HTMLElement {
   render() {
     this.viewer.render();
     this.plot?.draw();
-    if (this.policyReadout) {
-      if (this.demo.kind === 'franka_drawer') {
-        const opening = this.simulation.binding('joint_q')[this.demo.drawerCoordinate];
-        this.policyReadout.textContent = `Drawer opening · ${(opening * 100).toFixed(1)} cm`;
-      } else {
-        const body = (this.demo.objectBody ?? this.demo.handBody) * 7;
-        const pose = this.simulation.binding('body_q');
-        const goal = this.viewer.goal.position;
-        const distance = Math.hypot(pose[body] - goal.x, pose[body + 1] - goal.y, pose[body + 2] - goal.z);
-        this.policyReadout.textContent = `${this.demo.kind === 'franka_lift' ? 'Object' : 'Hand'} distance to target · ${(distance * 100).toFixed(1)} cm`;
-      }
-    }
   }
 
 }

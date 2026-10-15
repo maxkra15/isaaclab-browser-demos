@@ -171,7 +171,7 @@ export class RobotViewer {
       return mesh;
     });
     if (this.demo.softDrag) this.addSoftDrag();
-    if (this.demo.commandRange || this.demo.showTarget) {
+    if (this.isManipulation || this.demo.commandRange || this.demo.showTarget) {
       const geometry = new THREE.SphereGeometry(0.025, 20, 12);
       const material = new THREE.MeshStandardMaterial({ color: '#76b900', emissive: '#3a6000', transparent: true, opacity: 0.8 });
       this.goal = new THREE.Mesh(geometry, material);
@@ -402,10 +402,16 @@ export class RobotViewer {
     if (this.isManipulation) {
       this.target.fromArray(this.demo.cameraTarget);
       if (this.goal) {
-        const command = this.simulation.binding('command');
-        this.goal.position.set(command[0], command[1], command[2]);
-        this.goal.position.applyQuaternion(this.bodies[this.demo.rootBody].quaternion);
-        this.goal.position.add(this.bodies[this.demo.rootBody].position);
+        this.goal.visible = Boolean(this.manualTarget || this.demo.commandRange || this.demo.showTarget);
+        this.goal.scale.setScalar(this.manualTarget ? .45 : 1);
+        this.goal.material.color.set(this.manualTarget ? '#158aaf' : '#76b900');
+        if (this.manualTarget) this.goal.position.copy(this.manualTarget);
+        else if (this.simulation.manifest.bindings.command) {
+          const command = this.simulation.binding('command');
+          this.goal.position.set(command[0], command[1], command[2]);
+          this.goal.position.applyQuaternion(this.bodies[this.demo.rootBody].quaternion);
+          this.goal.position.add(this.bodies[this.demo.rootBody].position);
+        }
       }
     } else this.target.set(pose[root], this.demo.cameraHeight ?? (this.isAnymal ? 0.6 : 0.71), -pose[root + 1]);
     if (this.pushArrow) this.pushArrow.position.set(pose[root], pose[root + 2] + 0.03, -pose[root + 1]);

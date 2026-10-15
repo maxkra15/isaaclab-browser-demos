@@ -36,13 +36,15 @@ const releasedCategories = {
 const existing = releasedDemos.filter((demo) => !['ant', 'cable_bending'].includes(demo.id)).map((demo) => ({
   ...demo,
   ...releasedCategories[demo.id],
-  assetRoot: demo.id === 'dominoes' ? '../v6/browser_demos' : demo.assetRoot,
+  assetRoot: demo.id === 'mpm' ? './browser_demos/teleop-v1'
+    : demo.id === 'dominoes' ? '../v6/browser_demos' : demo.assetRoot,
 }));
 
 export const demos = [
   { id: 'cable_bending', title: 'VBD cable bending', group: 'Deformable lab', activity: 'tuning', physics: ['vbd'], description: 'A shorter clamped cable that settles. Tune stiffness and the tip load.', assetRoot: './browser_demos' },
   { id: 'franka_soft', title: 'Franka soft-body policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps and lifts a flexible beam. Change the target, tune stiffness, or pull the beam.', assetRoot: './browser_demos/policy-v1' },
   { id: 'franka_cloth', title: 'Franka cloth policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps a cloth sheet with real contacts. Change bending or target height and test recovery.', assetRoot: './browser_demos/policy-v1' },
-  { id: 'franka_stack', title: 'Franka cube stacking', group: 'Manipulation', activity: 'scripted', physics: ['rigid'], description: 'A scripted IK controller picks and stacks a cube. Change the placement target or release it early.', assetRoot: './browser_demos' },
+  { id: 'franka_stack', title: 'Franka cube stacking', group: 'Manipulation', activity: 'scripted', physics: ['rigid'], description: 'Stack cubes with a scripted controller, or take over the arm with keyboard IK.', assetRoot: './browser_demos/teleop-v1' },
   ...existing,
-];
+].map((demo) => demo.id.startsWith('franka_')
+  ? { ...demo, manualControl: `./browser_demos/teleop-v1/${demo.id}.json` } : demo);

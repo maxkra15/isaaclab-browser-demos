@@ -25,6 +25,7 @@ import torch
 import trimesh
 import warp as wp
 from bundle import write_binary_files, write_policy
+from franka_control import manual_control
 from isaaclab_newton.physics import NewtonManager
 from manipulation import _actor_action, _append_mesh, _joint_coordinates, _pack_visuals
 from newton_web import Parameter, export_graph
@@ -290,6 +291,7 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
             ] or obs["policy"].shape != (1, WIDTHS[0]):
                 raise ValueError("Reviewed observation, action or joint order changed")
             root = next(i for i, name in enumerate(model.body_label) if name.endswith("/panda_link0"))
+            hand = next(i for i, name in enumerate(model.body_label) if name.endswith("/panda_hand"))
             indices = wp.array(coordinates, dtype=int, device="cpu")
             dofs = wp.array(dof_ids, dtype=int, device="cpu")
             defaults = wp.array(robot.data.default_joint_pos.torch.numpy()[0], dtype=float, device="cpu")
@@ -428,10 +430,6 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 "boundaryNote": (
                     "Pretrained RSL-RL policy · MJWarp + VBD contacts · Material changes test generalization"
                 ),
-                "actions": [
-                    {"label": "Open gripper", "binding": "release", "value": 1},
-                    {"label": "Policy grip", "binding": "release", "value": 0},
-                ],
                 "source": {
                     "task": task,
                     "versions": versions,
@@ -444,6 +442,9 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 },
             }
             path.write_text(json.dumps(manifest, indent=2) + "\n")
+            (output / "manual-control.json").write_text(
+                json.dumps(manual_control(model, robot, root, hand, kind)) + "\n"
+            )
             # Compare from the exact serialized state, including both coupled
             # solvers' internal allocations and their lagged feedback buffers.
             snapshots = [

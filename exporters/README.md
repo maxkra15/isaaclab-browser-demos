@@ -71,7 +71,9 @@ including Poisson ratio and tensile yield ratio, and restart the drop.
 The 12 × 12 × 12 lattice samples the same 0.35 m cube at a density of
 1,000 kg/m³. Displayed particle radii are 40% of the lattice spacing;
 simulation radii remain 50%, so reducing the displayed grain size does not
-change the material volume.
+change the material volume. Particle projection keeps the displayed radius clear
+of the floor, cylinder and walls, including tub corners. The inner floor is at
+z=0; the checker ground sits beneath the tub's 4 cm base.
 
 | Reference | Stiffness [Pa] | Compression yield [Pa] | Friction | Cohesion [Pa] | Hardening | Poisson ratio | Tensile yield ratio |
 | --- | --- | --- | --- | --- | --- | --- | --- |

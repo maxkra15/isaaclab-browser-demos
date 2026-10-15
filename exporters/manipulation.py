@@ -17,6 +17,7 @@ import torch
 import trimesh
 import warp as wp
 from bundle import write_policy
+from franka_control import manual_control
 from isaaclab_newton.physics import NewtonManager
 from newton_web import export_graph
 from rsl_rl.modules.normalization import EmpiricalNormalization
@@ -24,7 +25,7 @@ from rsl_rl.modules.normalization import EmpiricalNormalization
 from pxr import Usd, UsdGeom, UsdShade
 
 from isaaclab.app import launch_simulation
-from isaaclab.envs import ManagerBasedRLEnv
+from isaaclab.envs import ManagerBasedRLEnv, mdp
 from isaaclab.sim import get_current_stage
 from isaaclab.utils.assets import retrieve_file_path
 
@@ -424,6 +425,13 @@ def export_manipulation(name: str, output: Path, checkpoint: Path) -> None:
         cfg.sim.physics.collision_cfg.rigid_contact_max = 512
     if kind == 0:
         cfg.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
+    if kind == 2:
+        # Keep the immutable v1 absolute-action profile. The registered task
+        # now uses EMA targets and a different reset/action offset.
+        cfg.scene.robot.init_state.joint_pos["panda_joint2"] = -0.569
+        cfg.actions.arm_action = mdp.JointPositionActionCfg(
+            asset_name="robot", joint_names=["panda_joint.*"], scale=1.0, use_default_offset=True
+        )
     if kind != 2:
         command_cfg = cfg.commands.ee_pose if kind == 0 else cfg.commands.object_pose
         command_cfg.debug_vis = False
@@ -636,8 +644,12 @@ def export_manipulation(name: str, output: Path, checkpoint: Path) -> None:
                 if kind == 1
                 else None,
                 "sourceAsset": cfg.scene.robot.spawn.usd_path,
+                "actionProfile": "legacy absolute joint positions" if kind == 2 else "native task actions",
             }
             manifest_path.write_text(json.dumps(manifest, separators=(",", ":")) + "\n")
+            (output / "manual-control.json").write_text(
+                json.dumps(manual_control(model, robot, root, hand, name.removeprefix("franka_"))) + "\n"
+            )
             graph_q, graph_body = [], []
             for _ in range(180):
                 actor_input = _actor_action(native_actor, widths, observation.numpy())

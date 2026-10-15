@@ -11,7 +11,7 @@ SPDX-License-Identifier: BSD-3-Clause
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Interactive Newton physics and pretrained policy demos for Isaac Lab, running locally in your browser.">
   <title>Isaac Lab interactive demos</title>
-  <link rel="stylesheet" href="css/browser-demo.css">
+  <link rel="stylesheet" href="css/browser-demo.css?rev=teleop-v1">
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 2rem max(1rem, calc((100vw - 1120px) / 2)); background: #f4f7f8; font: 16px/1.5 system-ui, sans-serif; color: #1a3039; }
@@ -49,6 +49,7 @@ SPDX-License-Identifier: BSD-3-Clause
     .badge { padding: .15rem .5rem; border-radius: 5px; background: #eef2f4; color: #526975; font-size: .7rem; }
     .badge-policy { background: #eef6e3; color: #426b00; }
     .badge-scripted { background: #fff1da; color: #896323; }
+    .badge-manual { background: #e4f3f8; color: #066f92; }
     .card-title { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
     .card strong { color: #1a3039; font-size: 1rem; }
     .card-arrow { color: #668376; }
@@ -71,7 +72,7 @@ SPDX-License-Identifier: BSD-3-Clause
 </head>
 <body>
   <nav aria-label="Navigation">
-    <a id="gallery-link" href="./?v=gallery-v1">Demo gallery</a>
+    <a id="gallery-link" href="./?v=teleop-v1">Demo gallery</a>
     <a href="https://isaac-sim.github.io/IsaacLab/">Isaac Lab documentation</a>
     <a href="https://github.com/maxkra15/isaaclab-browser-demos/tree/pages/exporters">Source and rebuild instructions</a>
   </nav>
@@ -106,8 +107,8 @@ SPDX-License-Identifier: BSD-3-Clause
     </a>
   </template>
   <script type="module">
-    import { demos, activities, physics } from './demos.js?rev=gallery-v1';
-    const revision = 'gallery-v1';
+    import { demos, activities, physics } from './demos.js?rev=teleop-v1';
+    const revision = 'teleop-v1';
     const content = document.querySelector('#content');
     const params = new URLSearchParams(location.search);
     const galleryParams = new URLSearchParams(params);
@@ -120,7 +121,7 @@ SPDX-License-Identifier: BSD-3-Clause
       document.title = `${demo.title} · Isaac Lab`;
       document.querySelector('h1').textContent = demo.title;
       document.querySelector('#description').textContent = `${demo.description} Drag to orbit, scroll to zoom, and use the controls to pause or reset.`;
-      await import('./css/browser-demo.js?rev=pretrained-vbd');
+      await import('./css/browser-demo.js?rev=teleop-v1');
       const widget = document.createElement('isaaclab-browser-demo');
       widget.setAttribute('src', `${demo.assetRoot || './browser_demos'}/${demo.id}/manifest.json`);
       content.append(widget);
@@ -165,6 +166,7 @@ SPDX-License-Identifier: BSD-3-Clause
             { label: activity.label, className: `badge badge-${activity.id}` },
             ...item.physics.map((id) => ({ label: physics.find((value) => value.id === id).label, className: 'badge' })),
           ];
+          if (item.manualControl) tags.push({ label: 'Manual control', className: 'badge badge-manual' });
           for (const tag of tags) {
             const badge = document.createElement('span');
             badge.className = tag.className;

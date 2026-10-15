@@ -21,25 +21,50 @@ return from a demo. For example, `?activity=policy&physics=vbd` selects both VBD
 | VBD cable bending | Clamped rod with live bending stiffness and tip load | Ten segments, 0.45 m long, 24 VBD iterations and eight substeps; actual rigid root clamp |
 | Franka soft-body policy | Pretrained policy controls an MJWarp arm coupled to a VBD tetrahedral beam; stiffness, target height and bounded mouse pulling | Native `Isaac-Lift-Soft-Franka` observations, relative joint actions, actuators and contacts; published Newton checkpoint |
 | Franka cloth policy | Pretrained policy grasps and lifts a VBD sheet through hand/finger contacts; bending, target height and bounded mouse pulling | Native `Isaac-Lift-Cloth-Franka` with a compact 5 × 5 particle grid; published Newton checkpoint; 20 observed nodes as in training |
-| Franka cube stacking | Native contrib scene; contact grasp, placement X/Y and early release | `IsaacContrib-Stack-Cube-Franka`, MuJoCo asset variant, one-world clone plan, unused frame sensor/observations omitted, Newton IK trajectory |
+| Franka cube stacking | Scripted contact grasp and stacking, or manual end-effector control | Contrib Franka scene with aligned 50 mm, 20 g procedural cubes and a matching tabletop collider; native Newton IK sequence |
+| MPM material response | Sand, snow, clay and water references falling into a tub | Finite particle clearance at the floor, cylinder and walls; checker ground beneath the tub base |
 
 The beam and cloth demos run their published RSL-RL actors in the browser using
 the existing MLP evaluator. The captured graph builds and normalizes all 93
 observations, applies the eight actions and advances native physics. Both grasp
 through contacts; the cloth has no attachment. Cube stacking still uses scripted IK.
-Visual bench legs are decorative; the native support collider is unchanged.
+The visible tabletop matches the native support collider; bench legs are decorative.
 Mouse pulling adds a spring force capped at 2 N; it does not edit particle poses.
-Open gripper temporarily overrides the learned gripper target; Policy grip returns
-control to the actor. Changing the material tests policy generalization, not
-performance on its original training distribution.
+Changing the material tests policy generalization, not performance on its
+original training distribution. Material settings are available in either mode.
 
-Physics stays at 120 Hz with two substeps for deformables. Each captured control
+For the beam and cloth, physics stays at 120 Hz with two substeps for deformables. Each captured control
 step includes four physics steps and one 30 Hz policy decision. Relative arm targets
 are reapplied at each native action boundary, preserving the task's update schedule.
-The five-second training horizon repeats. Rendering runs at up to 30 Hz; playback
-speed still depends on the device.
+Policy mode repeats the five-second training horizon. Manual mode continues until
+reset. Rendering runs at up to 30 Hz; playback speed still depends on the device.
 The beam uses the native coarse tetrahedralization; more vertices materially
 increase the browser CPU cost. Published meshes are fixed in each bundle.
+
+## Control the Franka
+
+Reach, lift, drawer opening, beam lifting and cloth lifting offer **Policy / Manual**.
+Cube stacking offers **Scripted / Manual**. The selected mode owns the arm and gripper;
+there are no separate policy-grip or release overrides. The reach task has no gripper action,
+so it shows movement controls only.
+
+In Manual, focus the viewport and hold **WASD / arrow keys** to move relative to the
+camera, **R/F** to raise/lower, **Q/E** to turn, and **G** to open/close the gripper.
+**Shift** gives finer movement; **Esc** stops. Releasing movement keys or touch buttons
+stops the requested motion. Small screens show a movement pad and gripper button.
+Pause and reset stay in the viewport. Reset keeps the selected mode; returning to
+Policy hands over the current scene, while selecting Scripted restarts its sequence.
+
+The shared browser IK controller uses exported native joint frames, axes, limits,
+mass/COM and actuator stiffness. It writes the existing action inputs, with gravity
+compensation and velocity damping; physics and contact handling stay in the same WASM
+simulation. The blue marker is the manual target. Joint limits, contacts and actuator
+dynamics constrain the actual motion. No joint, rigid-body or particle poses are edited.
+
+The legacy drawer bundle has an overlapping reset pose. Before displaying it, the
+controller performs a short IK retreat through 90 steps of the original physics.
+Reset performs the same initialization. Its original absolute-action offsets are
+retained; the current registered task's EMA controller is a different action profile.
 
 ## Rebuild
 
@@ -61,13 +86,25 @@ uv run --no-sync python "$demo_repo/exporters/scenes.py" cable_bending --output 
 uv run --no-sync --with 'pytetwild[all]>=0.3,<0.4' python "$demo_repo/exporters/deformable.py" soft --checkpoint /tmp/vbd-soft.pt --output "$build_dir" --emxx "$emxx"
 uv run --no-sync python "$demo_repo/exporters/deformable.py" cloth --checkpoint /tmp/vbd-cloth.pt --output "$build_dir" --emxx "$emxx"
 uv run --no-sync python "$demo_repo/exporters/stacking.py" --output "$build_dir" --emxx "$emxx"
+for kind in reach lift drawer soft cloth stack; do
+    uv run --no-sync --with 'pytetwild[all]>=0.3,<0.4' python "$demo_repo/exporters/franka_control.py" \
+        "$kind" --output "$build_dir/control/franka_$kind.json"
+done
 ```
 
-Copy the beam/cloth `<name>-web/` outputs to `site/lab/browser_demos/policy-v1/<name>/`.
+Copy the beam/cloth `<name>-web/` outputs to `site/lab/browser_demos/policy-v1/<name>/`,
+stacking to `site/lab/browser_demos/teleop-v1/franka_stack/`, and the six control JSON
+files to `site/lab/browser_demos/teleop-v1/`. Fresh captures emit `manual-control.json`
+beside their build data; use that metadata from the same capture when publishing new
+physics. The standalone command above prepares the existing preview profiles.
 Use a new asset path and update the module and gallery-link revisions when replacing
 a bundle, so cached files do not mix with a new simulation. Remove unused bundles
 from the mutable preview; retain published version directories. Other scenes use
 `site/lab/browser_demos/<name>/`.
+MPM retains the pinned Newton 1.6.0 / MuJoCo Warp 3.12.0 export toolchain in the
+export guide. Rebuild it separately and publish `mpm-web/` under
+`site/lab/browser_demos/teleop-v1/mpm/`; the lab viewer places its checker ground
+beneath the tub while the inner floor and collision boundary stay at z=0.
 Coupled control copies use a build-local Warp gather adapter because Warp 1.17
 CPU graph capture cannot record the original indexed `wp.copy`. It implements
 the same gather and restores Newton's helper after capture.
@@ -85,8 +122,11 @@ Browser checks verify the actor output, observation formula on the browser's own
 state, and learned lifting/tracking with closed-loop inference. Contact trajectories
 can diverge between native CPU and WASM due to floating-point differences;
 full per-particle equality after grasp is not a suitable cross-platform gate.
-In a browser, also verify pause/reset, slider persistence, early release,
-mouse picking and blur/cancel cleanup, material endpoints, and playback speed.
+In a browser, verify controller handoff, manual pose holding and movement, keyboard
+and touch release, gripper contacts, pause/reset, slider persistence, mouse picking,
+blur/cancel cleanup, material endpoints, and playback speed. Compare FK with native
+reference poses along motion, not only at reset. Stacking must keep the blue cube
+at 25 mm and leave the red cube 50 mm above it, within contact-solver tolerance.
 
 ## Other contrib candidates
 
