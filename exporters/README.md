@@ -22,9 +22,13 @@ Run export commands from the Isaac Lab checkout, with this project available at:
 demo_repo=/path/to/isaaclab-browser-demos
 ```
 
-Copy compiled outputs into a new version directory under `site/`. Preserve the
-relative paths of policies, shared meshes, textures, and license files. Existing
-published version directories stay unchanged.
+Replace current compiled outputs at their existing paths under `site/lab/`.
+Preserve the relative paths of policies, shared meshes, textures, and license
+files. Existing compatibility directories stay unchanged. Prepare the official
+publishing checkout with `python tools/publish.py --output /path/to/interactive-releases-checkout`.
+Follow the [publishing instructions](../README.md#publish) to append its committed
+archive to Isaac Lab's permanent `interactive-demos` release. Keep previous assets
+so documentation can pin an exact archive and checksum.
 
 ## Toolchain and scenes
 
@@ -32,7 +36,7 @@ The exporter uses Newton 1.6.0, Warp 1.17.0, MuJoCo Warp 3.12.0, and the
 internal `newton-web` export/compiler
 at commit `b0795fbe6b46e08a1fea2425699421415ca4cdf1` (an NVIDIA internal build
 tool). It requires Emscripten 5.0.3. The compiled assets are checked into
-`site/<next-version>/browser_demos/` so static deployment does not need the
+the gallery's `browser_demos/` directories so static deployment does not need the
 compiler or external robot and policy assets.
 Bundles larger than 2 MB are stored as gzip files. The shared browser widget
 decompresses them with `DecompressionStream` before initializing WebAssembly.
@@ -102,9 +106,14 @@ Density is fixed at 1,000 kg/m³ and the elastic damping relaxation time at
 0.01 s. Each two-second drop repeats; at most one physics step
 runs per animation frame, keeping controls responsive on slower CPUs. Playback
 speed depends on the device. The finite grid is intended for this compact comparison.
-The viewer renders the 1,728 moving particles with one instanced draw.
-The ground textures are checked into `site/<next-version>/browser_demos/shared/`
-from the same hosted asset selected by `GroundPlaneCfg`. The Three.js r170 module
+The current viewer renders all 2,744 moving particles with one instanced draw.
+The current ground textures are checked into `site/lab/browser_demos/shared/`
+from the same hosted asset selected by `GroundPlaneCfg`, with source and checksums
+in that directory's README. Current demos with a default ground plane share this
+material. MicroDuck retains the floor meshes and materials exported from its USD
+warehouse scene, without an additional ground plane.
+The ground preserves the asset's 2 m tiles, sRGB albedo and linear roughness.
+Existing `v1`–`v6` assets remain unchanged. The Three.js r170 module
 is minified with Terser 5.44.1 and checked into `static/vendor/`
 with its MIT license.
 
@@ -225,7 +234,7 @@ Expected input SHA-256 values for this build:
 | ANYmal-D flat Newton checkpoint | `0654295241696cdc7855f517a8d94a4951a243f6b21d73152225162ea01aeaaa` |
 
 Copy the contents of `stiffness-web/`, `cloth_bending-web/`, `mpm-web/`, `rigid_friction-web/`, `joint_pd-web/`, `cartpole-web/`, `g1-web/`, and `anymal-web/` into the corresponding
-`site/<next-version>/browser_demos/` directories. Verify the exported site through
+gallery asset directories. Verify the exported site through
 an HTTP server, since `file://` URLs cannot load the WebAssembly modules. The
 G1 bundle contains compiled Newton code, separate actor weights and visual
 meshes, and the required Unitree and WBC-AGILE license notices.
@@ -382,9 +391,11 @@ compares the policy observations with native Isaac Lab, and verifies native and
 captured standing/walking and the solver's elapsed time before compiling.
 
 
-For a local preview, download and verify the release archive using its `.sha256`
-file, extract it outside the checkout, and serve its complete root over HTTP.
-Open `v5/`; retain earlier version directories because current bundles reuse their assets.
+For a local preview, download the archive pinned by Isaac Lab's
+`.github/actions/_lib/stage-browser-demos.sh` and verify the checksum recorded there.
+Extract it outside the checkout, enter its top-level directory, and run
+`python -m http.server 8000 --directory site`. Open `http://localhost:8000/interactive/`.
+Retain the compatibility directories because current bundles reuse their assets.
 
 ### Warehouse interactions (version 5)
 

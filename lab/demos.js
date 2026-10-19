@@ -42,10 +42,33 @@ const existing = releasedDemos.filter((demo) => !['ant', 'cable_bending'].includ
 }));
 
 export const demos = [
+  {
+    id: 'pulley', title: 'Pulley workshop', group: 'Mechanisms', activity: 'tuning', physics: ['rigid', 'vbd'],
+    description: 'Try a real VBD cable over one, two or four wheels, or a massless block-and-tackle with up to six supporting strands. Pull the handle and compare measured force with the ideal reference.',
+    assetRoot: './browser_demos/pulley-v1',
+    ropeModels: [
+      {
+        id: 'tendon', label: 'Massless rope', sources: {
+          1: './browser_demos/pulley-v1/pulley_1/manifest.json',
+          2: './browser_demos/pulley-v1/pulley_2/manifest.json',
+          4: './browser_demos/pulley-v1/pulley/manifest.json',
+          6: './browser_demos/pulley-v1/pulley_6/manifest.json',
+        },
+      },
+      {
+        id: 'vbd', label: 'VBD cable', sources: {
+          1: './browser_demos/pulley-vbd-v1/pulley_vbd/manifest.json',
+          2: './browser_demos/pulley-vbd-v1/pulley_vbd_2/manifest.json',
+          4: './browser_demos/pulley-vbd-v1/pulley_vbd_4/manifest.json',
+        },
+      },
+    ],
+  },
   { id: 'cable_bending', title: 'VBD cable bending', group: 'Deformable lab', activity: 'tuning', physics: ['vbd'], description: 'A shorter clamped cable that settles. Tune stiffness and the tip load.', assetRoot: './browser_demos' },
+  { id: 'franka_cable', title: 'Franka cable policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained policy grasps and lifts a cable through real contacts. Change the target height or take over with keyboard IK.', assetRoot: './browser_demos/cable-policy-v1' },
   { id: 'franka_soft', title: 'Franka soft-body policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps and lifts a flexible beam. Change the target, tune stiffness, or pull the beam.', assetRoot: './browser_demos/policy-v1' },
   { id: 'franka_cloth', title: 'Franka cloth policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps a cloth sheet with real contacts. Change bending or target height and test recovery.', assetRoot: './browser_demos/policy-v1' },
   { id: 'franka_stack', title: 'Franka cube stacking', group: 'Manipulation', activity: 'scripted', physics: ['rigid'], description: 'Stack cubes with a scripted controller, or take over the arm with keyboard IK.', assetRoot: './browser_demos/teleop-v1' },
   ...existing,
 ].map((demo) => demo.id.startsWith('franka_')
-  ? { ...demo, manualControl: `./browser_demos/teleop-v1/${demo.id}.json` } : demo);
+  ? { ...demo, manualControl: `./browser_demos/${demo.id === 'franka_cable' ? 'cable-policy-v1' : 'teleop-v1'}/${demo.id}.json` } : demo);

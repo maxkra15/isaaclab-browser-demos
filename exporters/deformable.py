@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
-"""Capture pretrained Franka beam and cloth policies with native MJWarp/VBD physics."""
+"""Capture pretrained Franka beam, cloth and cable policies with native MJWarp/VBD physics."""
 
 from __future__ import annotations
 
@@ -42,6 +42,7 @@ WIDTHS = (93, 256, 128, 64, 8)
 CHECKPOINT_SHA256 = {
     "soft": "6e80e7beae1e0dead3218c4fd52fc2ec319dff9b0fb763a5d836d69d30389f6e",
     "cloth": "7e4491b0d4b7d37b4df50291bce8b3c5d091edb1a394b07f657f356299a95405",
+    "cable": "cfa30b3ce6531cef755796e146a44204d3668a24aec9f07308598048758cf51a",
 }
 
 # Match the task's separate float32 Torch operations when processing actions.
@@ -187,6 +188,27 @@ def batch_visuals(visuals: dict, raw: bytes, output: Path) -> dict:
     return {"file": output.name, "byteLength": len(data), "meshes": merged}
 
 
+def pack_cable_visuals(model, bodies: np.ndarray, visuals: dict, output: Path, color: tuple) -> dict:
+    """Render the native rod capsules; the USD curve's generated bodies have no mesh prims."""
+    data = bytearray(output.read_bytes())
+    types, shape_bodies, scales, poses = (
+        getattr(model, name).numpy() for name in ("shape_type", "shape_body", "shape_scale", "shape_transform")
+    )
+    for body in bodies:
+        shapes = np.flatnonzero(shape_bodies == body)
+        if len(shapes) != 1 or types[shapes[0]] != int(newton.GeoType.CAPSULE):
+            raise ValueError("Reviewed cable segment capsule layout changed")
+        shape = shapes[0]
+        geometry = trimesh.creation.capsule(radius=scales[shape, 0], height=2 * scales[shape, 1], count=(8, 12))
+        pose = poses[shape]
+        rotation = trimesh.transformations.quaternion_matrix(pose[[6, 3, 4, 5]])[:3, :3]
+        vertices = (geometry.vertices @ rotation.T + pose[:3]).astype("<f4")
+        _append_mesh(data, visuals["meshes"], vertices, geometry.faces, int(body), f"cable_{body}", color)
+    output.write_bytes(data)
+    visuals["byteLength"] = len(data)
+    return visuals
+
+
 @wp.kernel
 def _policy_targets(
     action: wp.array(dtype=float),
@@ -223,6 +245,7 @@ def _policy_observation(
     dofs: wp.array(dtype=int),
     defaults: wp.array(dtype=float),
     nodes: wp.array(dtype=int),
+    points_are_bodies: int,
     root: int,
     command: wp.array(dtype=float),
     action: wp.array(dtype=float),
@@ -237,13 +260,19 @@ def _policy_observation(
         value = q[indices[i]] - defaults[i]
     elif i < 18:
         value = qd[dofs[i - 9]]
-    elif i < 78:
-        point = wp.transform_point(wp.transform_inverse(bodies[root]), particles[nodes[(i - 18) // 3]])
+    elif i < 18 + nodes.shape[0] * 3:
+        point_index = nodes[(i - 18) // 3]
+        point_w = wp.vec3(0.0)
+        if points_are_bodies:
+            point_w = wp.transform_get_translation(bodies[point_index])
+        else:
+            point_w = particles[point_index]
+        point = wp.transform_point(wp.transform_inverse(bodies[root]), point_w)
         value = point[(i - 18) % 3]
-    elif i < 85:
-        value = command[i - 78]
+    elif i < 25 + nodes.shape[0] * 3:
+        value = command[i - 18 - nodes.shape[0] * 3]
     else:
-        value = action[i - 85]
+        value = action[i - 25 - nodes.shape[0] * 3]
     raw[i] = value
     observation[i] = (value - mean[i]) / denominator[i]
 
@@ -256,25 +285,35 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
     torch.set_num_threads(1)
     actor = torch.load(checkpoint, map_location="cpu", weights_only=True)["actor_state_dict"]
     mean_values = actor["obs_normalizer._mean"].numpy()[0]
-    denominator_values = actor["obs_normalizer._std"].numpy()[0] + EmpiricalNormalization(WIDTHS[0]).eps
+    cable = kind == "cable"
+    widths = (69, *WIDTHS[1:]) if cable else WIDTHS
+    denominator_values = actor["obs_normalizer._std"].numpy()[0] + EmpiricalNormalization(widths[0]).eps
     cloth = kind == "cloth"
-    task = f"Isaac-Lift-{'Cloth' if cloth else 'Soft'}-Franka"
+    task = f"Isaac-Lift-{kind.title()}-Franka"
     cfg = parse_env_cfg(task, device="cpu", num_envs=1)
     cfg.play_mode()
     cfg.seed = 42
-    cfg.scene.deformable.spawn.edge_refinement = 3 if cloth else 8
+    if not cable:
+        cfg.scene.deformable.spawn.edge_refinement = 3 if cloth else 8
+    else:
+        cfg.scene.cable.spawn.visual_material.diffuse_color = (0.02, 0.28, 0.35)
     cfg.sim.physics.use_cuda_graph = False
     cfg.sim.physics.solver_cfg.entries[0].solver_cfg.use_mujoco_contacts = True
     for entry in cfg.sim.physics.solver_cfg.entries:
         if hasattr(entry.solver_cfg, "particle_enable_tile_solve"):
             entry.solver_cfg.particle_enable_tile_solve = False
-    command_cfg = cfg.commands.deformable_pose
+    command_name = "cable_pose" if cable else "deformable_pose"
+    command_cfg = getattr(cfg.commands, command_name)
     command_cfg.debug_vis = False
     command_cfg.resampling_time_range = (1000.0, 1000.0)
     command_cfg.ranges.pos_x = (0.55, 0.55)
     command_cfg.ranges.pos_y = (0.0, 0.0)
     command_cfg.ranges.pos_z = (0.32, 0.32)
-    if cfg.actions.arm_action.scale != 0.03 or cfg.decimation != 4 or cfg.sim.physics.num_substeps != 2:
+    if (
+        cfg.actions.arm_action.scale != 0.03
+        or cfg.decimation != 4
+        or cfg.sim.physics.num_substeps != (4 if cable else 2)
+    ):
         raise ValueError("Reviewed relative-action or control timing contract changed")
     with launch_simulation(cfg, {"visualizer": ["none"], "device": "cpu"}):
         env = ManagerBasedRLEnv(cfg)
@@ -288,24 +327,32 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
             if robot.joint_names != [f"panda_joint{i}" for i in range(1, 8)] + [
                 "panda_finger_joint1",
                 "panda_finger_joint2",
-            ] or obs["policy"].shape != (1, WIDTHS[0]):
+            ] or obs["policy"].shape != (1, widths[0]):
                 raise ValueError("Reviewed observation, action or joint order changed")
             root = next(i for i, name in enumerate(model.body_label) if name.endswith("/panda_link0"))
             hand = next(i for i, name in enumerate(model.body_label) if name.endswith("/panda_hand"))
             indices = wp.array(coordinates, dtype=int, device="cpu")
             dofs = wp.array(dof_ids, dtype=int, device="cpu")
             defaults = wp.array(robot.data.default_joint_pos.torch.numpy()[0], dtype=float, device="cpu")
-            point_term = env.observation_manager.cfg.policy.deformable_sampled_points.func
-            nodes = wp.array(point_term.node_ids.numpy()[0].astype(np.int32), dtype=int, device="cpu")
-            command = wp.array(env.command_manager.get_command("deformable_pose").numpy()[0], dtype=float, device="cpu")
+            if cable:
+                point_indices = env.scene["cable"].data._sim_bind_body_ids.numpy()[0]
+            else:
+                point_term = env.observation_manager.cfg.policy.deformable_sampled_points.func
+                point_indices = point_term.node_ids.numpy()[0]
+            nodes = wp.array(point_indices.astype(np.int32), dtype=int, device="cpu")
+            command = wp.array(
+                env.command_manager.get_command(command_name).numpy()[0],
+                dtype=float,
+                device="cpu",
+            )
             height = wp.array([command.numpy()[2]], dtype=float, device="cpu")
             action = wp.zeros(8, dtype=float, device="cpu")
             release = wp.zeros(1, dtype=int, device="cpu")
             limits = wp.array(robot.data.soft_joint_pos_limits.torch.numpy()[0, 7:8], dtype=wp.vec2, device="cpu")
-            raw = wp.zeros(WIDTHS[0], dtype=float, device="cpu")
+            raw = wp.zeros(widths[0], dtype=float, device="cpu")
             mean = wp.array(mean_values, dtype=float, device="cpu")
             denominator = wp.array(denominator_values, dtype=float, device="cpu")
-            observation = wp.zeros(WIDTHS[0], dtype=float, device="cpu")
+            observation = wp.zeros(widths[0], dtype=float, device="cpu")
             observation_args = [
                 state.joint_q,
                 state.joint_qd,
@@ -315,6 +362,7 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 dofs,
                 defaults,
                 nodes,
+                int(cable),
                 root,
                 command,
                 action,
@@ -323,28 +371,53 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 raw,
                 observation,
             ]
-            wp.launch(_policy_observation, WIDTHS[0], observation_args, device="cpu")
+            wp.launch(_policy_observation, widths[0], observation_args, device="cpu")
             np.testing.assert_allclose(raw.numpy(), obs["policy"].numpy()[0], atol=2e-5, rtol=2e-5)
             drag_index = wp.array([-1], dtype=int, device="cpu")
             drag_target = wp.zeros(1, dtype=wp.vec3, device="cpu")
-            NewtonManager.register_state_force_callback(
-                lambda s: wp.launch(
-                    _drag_object, 1, [drag_index, drag_target, s.particle_q, s.particle_qd, s.particle_f], device="cpu"
+            if not cable:
+                NewtonManager.register_state_force_callback(
+                    lambda s: wp.launch(
+                        _drag_object,
+                        1,
+                        [
+                            drag_index,
+                            drag_target,
+                            s.particle_q,
+                            s.particle_qd,
+                            s.particle_f,
+                        ],
+                        device="cpu",
+                    )
                 )
-            )
             scale = wp.ones(1, dtype=float, device="cpu")
-            material = model.edge_bending_properties if cloth else model.tet_materials
-            initial_material = wp.clone(material)
-            soft_model = NewtonManager._solver.solver("soft").model
-            soft_material = soft_model.edge_bending_properties if cloth else soft_model.tet_materials
-            if soft_material.shape != material.shape:
-                raise ValueError("Unexpected coupled material mapping")
-            apply_material = _cloth_material if cloth else _volume_material
+            if not cable:
+                material = model.edge_bending_properties if cloth else model.tet_materials
+                initial_material = wp.clone(material)
+                soft_model = NewtonManager._solver.solver("soft").model
+                soft_material = soft_model.edge_bending_properties if cloth else soft_model.tet_materials
+                if soft_material.shape != material.shape:
+                    raise ValueError("Unexpected coupled material mapping")
+                apply_material = _cloth_material if cloth else _volume_material
             targets = robot.actuators.target_command.position.warp
-            with portable_coupler_controls(), wp.ScopedCapture(device="cpu", apic=True) as capture:
-                wp.launch(apply_material, material.shape, [scale, initial_material, material], device="cpu")
-                if soft_material.ptr != material.ptr:
-                    wp.launch(apply_material, material.shape, [scale, initial_material, soft_material], device="cpu")
+            with (
+                portable_coupler_controls(),
+                wp.ScopedCapture(device="cpu", apic=True) as capture,
+            ):
+                if not cable:
+                    wp.launch(
+                        apply_material,
+                        material.shape,
+                        [scale, initial_material, material],
+                        device="cpu",
+                    )
+                    if soft_material.ptr != material.ptr:
+                        wp.launch(
+                            apply_material,
+                            material.shape,
+                            [scale, initial_material, soft_material],
+                            device="cpu",
+                        )
                 wp.launch(_set_height, 1, [height, command], device="cpu")
                 for _ in range(1 if NewtonManager.handles_decimation() else cfg.decimation):
                     # Relative targets are recomputed at every native action-application
@@ -354,7 +427,7 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                     )
                     env.scene.write_data_to_sim()
                     NewtonManager.step()
-                wp.launch(_policy_observation, WIDTHS[0], observation_args, device="cpu")
+                wp.launch(_policy_observation, widths[0], observation_args, device="cpu")
             regions = {}
             for key, region in capture.graph._apic_capture._regions.items():
                 if region[0] not in regions or region[2] > regions[region[0]][1][2]:
@@ -362,11 +435,12 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
             capture.graph._apic_capture._regions = dict(regions.values())
             env.scene.update(dt=env.step_dt)
             obs = env.observation_manager.compute()
-            wp.launch(_policy_observation, WIDTHS[0], observation_args, device="cpu")
+            wp.launch(_policy_observation, widths[0], observation_args, device="cpu")
             np.testing.assert_allclose(raw.numpy(), obs["policy"].numpy()[0], atol=2e-5, rtol=2e-5)
-            bindings = {
-                n: getattr(state, n) for n in ("body_q", "body_qd", "joint_q", "joint_qd", "particle_q", "particle_qd")
-            }
+            binding_names = ("body_q", "body_qd", "joint_q", "joint_qd")
+            if not cable:
+                binding_names += ("particle_q", "particle_qd")
+            bindings = {name: getattr(state, name) for name in binding_names}
             display = SimpleNamespace(
                 body_count=model.body_count,
                 particle_count=model.particle_count,
@@ -380,6 +454,12 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                     [wp.transform(wp.vec3(0, 0, -1.05), wp.quat_identity())], dtype=wp.transform, device="cpu"
                 ),
             )
+            extra_inputs = {} if cable else {"material": scale, "drag_index": drag_index, "drag_target": drag_target}
+            parameters = [Parameter("height", 0, "Target height [m]", 0.25, 0.5, 0.005)]
+            if not cable:
+                parameters.append(
+                    Parameter("material", 0, "Bending scale" if cloth else "Elastic stiffness scale", 0.25, 4.0, 0.01)
+                )
             export_graph(
                 capture.graph,
                 model=display,
@@ -391,27 +471,36 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                     "observation": observation,
                     "command": command,
                     "height": height,
-                    "material": scale,
                     "release": release,
-                    "drag_index": drag_index,
-                    "drag_target": drag_target,
+                    **extra_inputs,
                 },
                 outputs={**bindings, "observation": observation},
-                persistent=("height", "material"),
-                parameters=(
-                    Parameter("height", 0, "Target height [m]", 0.25, 0.5, 0.005),
-                    Parameter("material", 0, "Bending scale" if cloth else "Elastic stiffness scale", 0.25, 4.0, 0.01),
-                ),
+                persistent=("height",) if cable else ("height", "material"),
+                parameters=tuple(parameters),
             )
-            visuals = pack_workbench(get_current_stage(), model, output / "visuals.bin", cloth)
+            visuals = pack_workbench(
+                get_current_stage(),
+                model,
+                output / "visuals.bin",
+                cloth,
+                extra_roots=("/World/envs/env_0/Cable",) if cable else (),
+            )
+            if cable:
+                visuals = pack_cable_visuals(
+                    model,
+                    point_indices,
+                    visuals,
+                    output / "visuals.bin",
+                    cfg.scene.cable.spawn.visual_material.diffuse_color,
+                )
             path = output / "manifest.json"
             manifest = json.loads(path.read_text())
             manifest["isaacLabDemo"] = {
                 "kind": "franka_" + kind,
-                "title": "Franka cloth policy" if cloth else "Franka soft-body policy",
+                "title": f"Franka {'cable' if cable else 'cloth' if cloth else 'soft-body'} policy",
                 "viewer": "robot",
                 "controls": "parameters",
-                "policy": write_policy(checkpoint, output, WIDTHS),
+                "policy": write_policy(checkpoint, output, widths),
                 "decimation": 1,
                 "cycleSteps": 150,
                 "visuals": visuals,
@@ -423,12 +512,14 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 "scene": "workbench",
                 "showTarget": True,
                 "toneMappingExposure": 1.15,
-                "logParameters": ["material"],
+                "logParameters": [] if cable else ["material"],
                 "maxStepsPerFrame": 2,
                 "renderFPS": 30,
-                "softDrag": True,
+                "softDrag": not cable,
                 "boundaryNote": (
-                    "Pretrained RSL-RL policy · MJWarp + VBD contacts · Material changes test generalization"
+                    "Pretrained RSL-RL policy · MJWarp + VBD contact grasp"
+                    if cable
+                    else "Pretrained RSL-RL policy · MJWarp + VBD contacts · Material changes test generalization"
                 ),
                 "source": {
                     "task": task,
@@ -441,6 +532,13 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                     ),
                 },
             }
+            if cable:
+                manifest["isaacLabDemo"]["cableBodies"] = nodes.numpy().tolist()
+                manifest["isaacLabDemo"]["source"]["checkpointUrl"] = (
+                    "https://omniverse-content-production.s3-us-west-2.amazonaws.com/"
+                    "Assets/Isaac/6.2/Isaac/IsaacLab/PretrainedCheckpoints/rsl_rl/"
+                    "Isaac-Lift-Cable-Franka_newtonmjwarpvbdproxy_none_rsl_rl.pt"
+                )
             path.write_text(json.dumps(manifest, indent=2) + "\n")
             (output / "manual-control.json").write_text(
                 json.dumps(manual_control(model, robot, root, hand, kind)) + "\n"
@@ -456,7 +554,7 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
             # Prove preprocessing against the actual task managers through grasp and hold.
             for frame in range(149):
                 raw_values = obs["policy"].numpy()[0]
-                decision = _actor_action(actor, WIDTHS, (raw_values - mean_values) / denominator_values)
+                decision = _actor_action(actor, widths, (raw_values - mean_values) / denominator_values)
                 action.assign(decision.numpy())
                 wp.launch(
                     _policy_targets, 8, [action, state.joint_q, indices, limits, release, check_targets], device="cpu"
@@ -468,11 +566,13 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 obs, _, terminated, truncated, _ = env.step(decision.reshape(1, -1))
                 if terminated.any() or truncated.any():
                     raise RuntimeError("Native policy terminated before its reviewed horizon")
-                wp.launch(_policy_observation, WIDTHS[0], observation_args, device="cpu")
+                wp.launch(_policy_observation, widths[0], observation_args, device="cpu")
                 np.testing.assert_allclose(raw.numpy(), obs["policy"].numpy()[0], atol=2e-4, rtol=2e-4)
                 native_actions.append(decision.numpy().copy())
                 native_body.append(state.body_q.numpy().copy())
-                native_particles.append(state.particle_q.numpy().copy())
+                native_particles.append(
+                    state.body_q.numpy()[point_indices, :3].copy() if cable else state.particle_q.numpy().copy()
+                )
             native_height = float(native_particles[-1][:, 2].mean())
             if native_height < 0.18:
                 raise RuntimeError(f"Native pretrained policy did not hold the object: {native_height:.3f} m")
@@ -486,7 +586,9 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
                 if not all(np.isfinite(getattr(state, name).numpy()).all() for name in bindings):
                     raise RuntimeError("Non-finite captured policy trajectory")
                 rows.append(state.body_q.numpy().copy())
-                particles.append(state.particle_q.numpy().copy())
+                particles.append(
+                    state.body_q.numpy()[point_indices, :3].copy() if cable else state.particle_q.numpy().copy()
+                )
                 observations.append(observation.numpy().copy())
             body_delta = np.max(np.abs(np.asarray(rows) - np.asarray(native_body)))
             particle_delta = np.max(np.abs(np.asarray(particles) - np.asarray(native_particles)))
@@ -526,7 +628,7 @@ def export(kind: str, output: Path, checkpoint: Path) -> None:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("kind", choices=("soft", "cloth"))
+    p.add_argument("kind", choices=("soft", "cloth", "cable"))
     p.add_argument("--checkpoint", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--emxx", default="em++")

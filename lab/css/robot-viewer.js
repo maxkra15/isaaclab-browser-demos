@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 import * as THREE from '../../v1/vendor/three.module.min.js';
-import { addIsaacLabGround } from '../../v1/css/browser-ground.js';
+import { addIsaacLabGround } from './browser-ground.js?rev=01ee9fecd932';
 import { OrbitCamera } from '../../v6/css/browser-orbit.js';
 
 export class RobotViewer {
@@ -12,7 +12,7 @@ export class RobotViewer {
     const { visuals } = simulation.manifest.isaacLabDemo;
     const assets = await Promise.all((Array.isArray(visuals) ? visuals : [visuals]).map(async (description) => {
       const chunks = await Promise.all((description.files || [description.file]).map(async (file) => {
-        const response = await fetch(new URL(file, simulation.url));
+        const response = await fetch(new URL(file, simulation.url), { cache: 'no-cache' });
         if (!response.ok) throw new Error(`Robot visual request failed (${response.status})`);
         return response.arrayBuffer();
       }));
@@ -35,7 +35,7 @@ export class RobotViewer {
       await Promise.all(viewer.materials.filter((material) => material.userData.texture).map(async (material) => {
         const url = new URL(material.userData.texture, simulation.url).href;
         if (!textures.has(url)) textures.set(url, (async () => {
-          const response = await fetch(url, { signal: viewer.textureAbort.signal });
+          const response = await fetch(url, { signal: viewer.textureAbort.signal, cache: 'no-cache' });
           if (!response.ok) throw new Error(`Scene texture request failed (${response.status})`);
           const bitmap = await createImageBitmap(await response.blob(), { imageOrientation: 'flipY' });
           if (viewer.disposed) { bitmap.close(); throw new Error('Scene was disposed'); }
@@ -66,7 +66,7 @@ export class RobotViewer {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = this.demo.toneMappingExposure ?? (this.demo.scene === 'warehouse' ? 1.25 : this.demo.kind === 'microduck' ? 1.05 : 1.65);
+    this.renderer.toneMappingExposure = this.demo.toneMappingExposure ?? (this.demo.scene === 'warehouse' ? 1.25 : this.demo.kind === 'microduck' ? 1.05 : 1.15);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene = new THREE.Scene();

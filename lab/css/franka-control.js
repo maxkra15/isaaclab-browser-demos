@@ -32,7 +32,7 @@ function solve(matrix, value) {
 
 export class FrankaControl {
   static async load(simulation, source) {
-    const response = await fetch(new URL(source, document.baseURI));
+    const response = await fetch(new URL(source, document.baseURI), { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Manual-control metadata request failed (${response.status})`);
     return new FrankaControl(simulation, await response.json());
   }

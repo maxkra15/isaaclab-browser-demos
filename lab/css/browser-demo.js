@@ -3,7 +3,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos } from '../demos.js?rev=grains-v1';
+import { demos } from '../demos.js?rev=01ee9fecd932';
+import { loadGroundViewer } from './browser-ground.js?rev=01ee9fecd932';
 
 const arrayTypes = {
   float32: [Float32Array, 'HEAPF32'], float64: [Float64Array, 'HEAPF64'],
@@ -12,7 +13,7 @@ const arrayTypes = {
 
 async function loadBinaryFiles(url, files, label) {
   return Promise.all(files.map(async (file) => {
-    const response = await fetch(new URL(file, url));
+    const response = await fetch(new URL(file, url), { cache: 'no-cache' });
     if (!response.ok) throw new Error(`${label} request failed (${response.status})`);
     return response.arrayBuffer();
   }));
@@ -21,23 +22,23 @@ async function loadBinaryFiles(url, files, label) {
 class BrowserSimulation {
   static async load(source, wasmSource) {
     const url = new URL(source, document.baseURI);
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Manifest request failed (${response.status})`);
     const manifest = await response.json();
     if (manifest.bundleVersion !== 1 || manifest.abiVersion !== 1) throw new Error('Unsupported simulation bundle');
-    const factory = (await import(new URL(manifest.module, url).href)).default;
+    const moduleUrl = new URL(manifest.module, url);
+    moduleUrl.search = url.search;
+    const factory = (await import(moduleUrl.href)).default;
     const wasmUrl = new URL(wasmSource || manifest.wasm, url);
     const options = { locateFile: (name) => name.endsWith('.wasm') ? wasmUrl.href : new URL(name, url).href };
-    if (manifest.wasm.endsWith('.gz') || manifest.wasmFiles) {
-      const files = wasmSource ? [wasmSource] : (manifest.wasmFiles || [manifest.wasm]);
-      const chunks = await loadBinaryFiles(url, files, 'WebAssembly');
-      let stream = new Blob(chunks).stream();
-      if (manifest.wasm.endsWith('.gz')) {
-        if (!('DecompressionStream' in window)) throw new Error('This browser cannot decompress the simulation bundle');
-        stream = stream.pipeThrough(new DecompressionStream('gzip'));
-      }
-      options.wasmBinary = new Uint8Array(await new Response(stream).arrayBuffer());
+    const files = wasmSource ? [wasmSource] : (manifest.wasmFiles || [manifest.wasm]);
+    const chunks = await loadBinaryFiles(url, files, 'WebAssembly');
+    let stream = new Blob(chunks).stream();
+    if (manifest.wasm.endsWith('.gz')) {
+      if (!('DecompressionStream' in window)) throw new Error('This browser cannot decompress the simulation bundle');
+      stream = stream.pipeThrough(new DecompressionStream('gzip'));
     }
+    options.wasmBinary = new Uint8Array(await new Response(stream).arrayBuffer());
     const module = await factory(options);
     const simulation = new BrowserSimulation(manifest, module);
     if (!simulation.init()) {
@@ -139,17 +140,28 @@ class IsaacLabBrowserDemo extends HTMLElement {
     const generation = this.generation;
     this.visible = false;
     this.observer = new IntersectionObserver(([entry]) => {
+      if (generation !== this.generation || !this.isConnected) return;
       this.visible = entry.isIntersecting;
-      if (this.visible && !this.loading) this.loading = this.load(generation);
-      else if (this.visible && this.ready && !this.failed && !this.frameId) {
-        this.previousTime = performance.now();
-        this.frameId = requestAnimationFrame((time) => this.frame(time));
-      } else if (!this.visible && this.frameId) {
-        cancelAnimationFrame(this.frameId);
-        this.frameId = 0;
-      }
+      this.updateVisibility();
     });
+    this.visibilityChanged = () => this.updateVisibility();
+    document.addEventListener('visibilitychange', this.visibilityChanged);
     this.observer.observe(this);
+  }
+
+  updateVisibility() {
+    if (!this.isConnected || !this.visible || document.hidden) {
+      cancelAnimationFrame(this.frameId);
+      this.frameId = 0;
+      this.releaseControls?.();
+      this.viewer?.releasePush?.();
+      return;
+    }
+    if (!this.loading) this.loading = this.load(this.generation);
+    else if (this.ready && !this.failed && !this.frameId) {
+      this.previousTime = performance.now();
+      this.frameId = requestAnimationFrame((time) => this.frame(time));
+    }
   }
 
   disconnectedCallback() {
@@ -157,6 +169,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.ready = false;
     this.observer?.disconnect();
     this.observer = null;
+    document.removeEventListener('visibilitychange', this.visibilityChanged);
+    this.visibilityChanged = null;
     cancelAnimationFrame(this.frameId);
     this.frameId = 0;
     this.releaseControls?.();
@@ -195,9 +209,17 @@ class IsaacLabBrowserDemo extends HTMLElement {
       const title = this.getAttribute('demo-title') || this.demo.title;
       this.querySelector('.browser-demo-head strong').textContent = title;
       this.canvas.setAttribute('aria-label', `${title} interactive simulation`);
-      if (this.demo.viewer === 'rigid' || this.demo.kind === 'rigid_friction' || this.demo.kind === 'joint_pd') {
+      if (this.demo.kind === 'pulley') {
+        const { PulleyViewer } = await import('./pulley-viewer.js?rev=01ee9fecd932');
+        const viewer = await PulleyViewer.load(this.canvas, this.simulation);
+        if (this.generation !== generation) {
+          viewer.dispose();
+          return;
+        }
+        this.viewer = viewer;
+      } else if (this.demo.viewer === 'rigid' || this.demo.kind === 'rigid_friction' || this.demo.kind === 'joint_pd') {
         const { RigidViewer } = await import('../../v6/css/rigid-viewer.js');
-        const viewer = await RigidViewer.load(this.canvas, this.simulation);
+        const viewer = await loadGroundViewer(RigidViewer, this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
           return;
@@ -214,7 +236,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;
-        const viewer = await CartpoleViewer.load(this.canvas, this.simulation);
+        const viewer = await loadGroundViewer(CartpoleViewer, this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
           return;
@@ -222,7 +244,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       } else if (!['stiffness', 'cloth_bending', 'mpm'].includes(this.demo.kind)) {
         const [{ RobotViewer }, policy] = await Promise.all([
-          import('./robot-viewer.js?rev=teleop-v1'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
+          import('./robot-viewer.js?rev=01ee9fecd932'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;
@@ -237,10 +259,10 @@ class IsaacLabBrowserDemo extends HTMLElement {
           this.previousAction = new Float32Array(this.demo.actionIndices?.length || this.demo.jointNames.length);
         }
       } else {
-        const Viewer = this.demo.kind === 'mpm'
-          ? (await import('./mpm-viewer.js?rev=teleop-v1')).MpmViewer
-          : (await import('../../v1/css/stiffness-viewer.js')).StiffnessViewer;
-        const viewer = await Viewer.load(this.canvas, this.simulation);
+        const { StiffnessViewer } = await import('../../v1/css/stiffness-viewer.js');
+        // The MPM tub's inner floor is z=0; the ground sits beneath its base.
+        const groundHeight = this.demo.kind === 'mpm' ? -this.demo.tub.thickness : 0;
+        const viewer = await loadGroundViewer(StiffnessViewer, this.canvas, this.simulation, groundHeight);
         if (this.generation !== generation) {
           viewer.dispose();
           return;
@@ -248,7 +270,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       }
       if (this.isManipulation) {
-        const { FrankaControl } = await import('./franka-control.js?rev=teleop-v1');
+        const { FrankaControl } = await import('./franka-control.js?rev=01ee9fecd932');
         const source = new URL(demos.find((item) => item.id === this.demo.kind).manualControl, new URL('../', import.meta.url));
         const control = await FrankaControl.load(this.simulation, source);
         if (this.generation !== generation) return;
@@ -281,7 +303,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.status.textContent = 'Running in your browser';
       this.render();
       this.ready = true;
-      if (this.visible) this.frameId = requestAnimationFrame((time) => this.frame(time));
+      this.updateVisibility();
+      this.dispatchEvent(new CustomEvent('browser-demo-ready', { bubbles: true }));
     } catch (error) {
       if (this.generation !== generation) return;
       this.failed = true;
@@ -293,6 +316,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.simulation = null;
       this.status.textContent = `Could not start: ${error.message}`;
       this.status.classList.add('browser-demo-error');
+      this.dispatchEvent(new CustomEvent('browser-demo-error', { bubbles: true, detail: { message: error.message } }));
       const retry = document.createElement('button');
       retry.textContent = 'Retry loading';
       retry.addEventListener('click', () => { this.loading = this.load(this.generation); });
@@ -303,7 +327,9 @@ class IsaacLabBrowserDemo extends HTMLElement {
 
   setupControls() {
     const panel = this.querySelector('.browser-demo-controls');
-    if (this.franka) {
+    if (this.demo.kind === 'pulley') {
+      this.viewer.setupControls(this, panel);
+    } else if (this.franka) {
       this.setupFrankaControls(panel);
     } else if (this.demo.controls === 'parameters') {
       for (const parameter of this.simulation.manifest.parameters) {
@@ -738,15 +764,13 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.plot.reset();
       this.updateJointPdTarget();
     }
+    if (this.demo.kind === 'pulley') this.viewer.reset();
     this.render();
     if (recovering) {
       this.failed = false;
       this.status.classList.remove('browser-demo-error');
       this.status.textContent = this.running ? 'Running in your browser' : 'Paused';
-      if (this.visible && this.ready && !this.frameId) {
-        this.previousTime = performance.now();
-        this.frameId = requestAnimationFrame((time) => this.frame(time));
-      }
+      this.updateVisibility();
     }
   }
 
@@ -1047,7 +1071,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
   }
 
   frame(time) {
-    if (!this.isConnected || !this.visible) {
+    if (!this.isConnected || !this.visible || document.hidden) {
       this.frameId = 0;
       return;
     }
@@ -1064,6 +1088,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
           if (this.demo.kind === 'joint_pd') this.updateJointPdTarget();
           this.simulation.step();
           this.tick += 1;
+          if (this.demo.kind === 'pulley') this.viewer.sample(this.tick * this.simulation.manifest.timestep);
           if (this.demo.kind === 'joint_pd') {
             this.plot.add(this.tick * this.simulation.manifest.timestep,
               this.simulation.binding('target_q')[this.selectedJoint],
@@ -1096,6 +1121,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.frameId = 0;
       this.status.textContent = `Simulation stopped: ${error.message}`;
       this.status.classList.add('browser-demo-error');
+      this.dispatchEvent(new CustomEvent('browser-demo-error', { bubbles: true, detail: { message: error.message } }));
       console.error(error);
     }
   }

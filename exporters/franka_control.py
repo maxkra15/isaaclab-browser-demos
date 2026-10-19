@@ -63,6 +63,7 @@ def manual_control(model: newton.Model, robot: Articulation, root: int, hand: in
         "drawer": ("absolute", 1.0, "binary"),
         "soft": ("relative", 0.03, "normalized"),
         "cloth": ("relative", 0.03, "normalized"),
+        "cable": ("relative", 0.03, "normalized"),
         "stack": ("position", 1.0, "position"),
     }[kind]
     namespace = getattr(model, "mujoco", None)
@@ -93,8 +94,8 @@ def manual_control(model: newton.Model, robot: Articulation, root: int, hand: in
         "modeBinding": "manual" if kind == "stack" else None,
         "settleSteps": 90 if kind == "drawer" else 0,
         "homeOffset": [-0.06, 0, 0.02] if kind == "drawer" else [0, 0, 0],
-        "motionGain": 0.5 if kind in ("soft", "cloth") else 1.0,
-        "velocityDamping": 0.05 if kind in ("soft", "cloth") else 0.0,
+        "motionGain": 0.5 if kind in ("soft", "cloth", "cable") else 1.0,
+        "velocityDamping": 0.05 if kind in ("soft", "cloth", "cable") else 0.0,
         "gravity": model.gravity.numpy()[0].tolist(),
         "masses": masses.tolist(),
         "centers": model.body_com.numpy().tolist(),
@@ -114,7 +115,7 @@ def main() -> None:
     from isaaclab_tasks.utils.parse_cfg import parse_env_cfg
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("kind", choices=("reach", "lift", "drawer", "soft", "cloth", "stack"))
+    parser.add_argument("kind", choices=("reach", "lift", "drawer", "soft", "cloth", "cable", "stack"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.kind == "stack":
@@ -128,8 +129,9 @@ def main() -> None:
             "drawer": "Isaac-Open-Drawer-Franka",
             "soft": "Isaac-Lift-Soft-Franka",
             "cloth": "Isaac-Lift-Cloth-Franka",
+            "cable": "Isaac-Lift-Cable-Franka",
         }[args.kind]
-        overrides = [] if args.kind in ("soft", "cloth") else ["physics=newton_mjwarp"]
+        overrides = [] if args.kind in ("soft", "cloth", "cable") else ["physics=newton_mjwarp"]
         if args.kind == "lift":
             overrides.append("presets=cube")
         cfg = parse_env_cfg(task, device="cpu", num_envs=1, overrides=overrides)
@@ -147,6 +149,8 @@ def main() -> None:
             for entry in cfg.sim.physics.solver_cfg.entries:
                 if hasattr(entry.solver_cfg, "particle_enable_tile_solve"):
                     entry.solver_cfg.particle_enable_tile_solve = False
+        elif args.kind == "cable":
+            cfg.sim.physics.solver_cfg.entries[0].solver_cfg.use_mujoco_contacts = True
     cfg.seed = 42
     with launch_simulation(cfg, {"visualizer": ["none"], "device": "cpu"}):
         env = ManagerBasedRLEnv(cfg)

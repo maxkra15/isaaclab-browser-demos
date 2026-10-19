@@ -24,6 +24,40 @@ isaaclab-browser-demo [hidden] { display: none !important; }
 .browser-demo-franka-material { width: 100%; font-size: .82rem; }
 .browser-demo-franka-material summary { color: #536b74; cursor: pointer; }
 .browser-demo-franka-material > div { padding-top: .8rem; }
+.browser-demo-pulley-viewport { position: relative; }
+.browser-demo-pulley-heading { position: absolute; top: 18px; left: 20px; display: grid; gap: 2px; padding: .65rem .85rem; border: 1px solid #fff9; border-radius: 12px; background: #ffffffa6; backdrop-filter: blur(8px); pointer-events: none; }
+.browser-demo-pulley-heading small { color: #69818a; font-size: .59rem; font-weight: 700; letter-spacing: .12em; }
+.browser-demo-pulley-heading strong { color: #245365; font-size: 1.9rem; line-height: 1.2; }
+.browser-demo-pulley-heading span { color: #536b74; font-size: .72rem; }
+.browser-demo-pulley-configurations { display: flex; flex-wrap: wrap; gap: .35rem; width: 100%; }
+.browser-demo-pulley-configurations button { flex: 1; min-height: 40px; border-radius: 9px; background: #f0f5f6; border-color: transparent; font-weight: 600; }
+.browser-demo-pulley-configurations button[aria-pressed="true"] { border-color: #89b54d; background: #eef7e4; color: #426b00; }
+.browser-demo-pulley-plot { position: absolute; bottom: 18px; left: 18px; width: 290px; padding: 12px 14px 7px; border: 1px solid #fff9; border-radius: 12px; background: #ffffffd6; backdrop-filter: blur(10px); box-shadow: 0 4px 20px #152e3810; pointer-events: none; }
+.browser-demo-pulley-plot-heading { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.browser-demo-pulley-plot-heading strong { font-size: .78rem; }
+.browser-demo-pulley-plot-heading small { color: #788b92; font-size: .56rem; }
+.browser-demo-pulley-legend { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: .6rem; }
+.browser-demo-pulley-legend > div { display: grid; gap: .12rem; }
+.browser-demo-pulley-legend span { color: #536b74; font-size: .65rem; }
+.browser-demo-pulley-legend span::before { display: inline-block; width: .65rem; height: 3px; margin-right: .35rem; content: ''; vertical-align: middle; }
+.browser-demo-pulley-ideal span::before { background: #609000; }
+.browser-demo-pulley-measured span::before { background: #168bb1; }
+.browser-demo-pulley-legend output { font-size: 1rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.browser-demo .browser-demo-pulley-plot canvas { display: block; width: 100%; height: 115px; min-height: 0; margin-top: .35rem; cursor: default; touch-action: auto; }
+.browser-demo-pulley-label { position: absolute; transform: translate(-50%, -50%); padding: .22rem .45rem; border: 1px solid #ffffff90; border-radius: 6px; background: #ffffffc4; color: #3b5865; font-size: .65rem; white-space: nowrap; pointer-events: none; }
+.browser-demo-pulley-viewport > canvas.browser-demo-pushing ~ .browser-demo-pulley-pull { border-color: #76b900; background: #e6f5cc; color: #375c00; font-weight: 650; box-shadow: 0 0 0 2px #76b90022; }
+.browser-demo-pulley-hint { position: absolute; right: 18px; bottom: 18px; max-width: 48%; padding: .45rem .65rem; border-radius: 8px; background: #ffffffa6; color: #536b74; font-size: .67rem; pointer-events: none; }
+.browser-demo-pulley-note { display: block; width: 100%; color: #71848c; font-size: .72rem; line-height: 1.55; }
+@media (max-width: 700px) {
+  .browser-demo-pulley .browser-demo-pulley-viewport > canvas { height: 430px; min-height: 430px; }
+  .browser-demo-pulley-heading { top: 12px; left: 12px; padding: .5rem .65rem; }
+  .browser-demo-pulley-heading strong { font-size: 1.45rem; }
+  .browser-demo-pulley-heading small, .browser-demo-pulley-heading span { display: none; }
+  .browser-demo-pulley-plot { position: static; box-sizing: border-box; width: 100%; border: 0; border-top: 1px solid #e0e9ec; border-radius: 0; background: #f9fbfc; box-shadow: none; }
+  .browser-demo-pulley-plot-heading small { font-size: .65rem; }
+  .browser-demo-pulley-hint { bottom: auto; top: 390px; left: 12px; right: 12px; max-width: none; text-align: center; }
+  .browser-demo-pulley-configurations button { padding: .4rem .2rem; font-size: .75rem; }
+}
 @media (max-width: 600px) {
   .browser-demo-franka-mode button { min-width: 65px; min-height: 40px; }
   [data-control-mode="manual"] .browser-demo-franka-help { display: none; }
