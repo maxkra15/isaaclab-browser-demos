@@ -360,12 +360,7 @@ export class PulleyViewer {
     if (Object.keys(activeModel.sources).length > 1) setup.append(configuration);
     panel.append(setup);
     if (this.demo.ropeModel === 'newton') this.setupTendonControls(host, panel);
-    const forceLabels = this.demo.ropeModel === 'newton'
-      ? { ideal: 'Frictionless reference', measured: 'Measured pull',
-        ariaLabel: 'Native tendon endpoint force compared with the frictionless static reference' }
-      : this.demo.ropeModel === 'vbd'
-        ? { ideal: 'Ideal · massless rope', measured: 'Measured pull' } : {};
-    this.plot = new PulleyPlot(panel.parentElement, forceLabels);
+    this.plot = new PulleyPlot(panel.parentElement);
     this.hint = document.createElement('div');
     this.hint.className = 'browser-demo-pulley-hint';
     this.hint.textContent = 'Drag the gold handle to pull · Drag the scene to orbit';
@@ -379,13 +374,12 @@ export class PulleyViewer {
     about.append(summary);
     const note = document.createElement('small');
     note.className = 'browser-demo-pulley-note';
-    const ideal = this.demo.supportingStrands === 1 ? 'Ideal at rest: payload × gravity.'
-      : `Ideal at rest: (payload + ${this.demo.movingSheaveMass.toFixed(3)} kg of moving wheels) × gravity ÷ ${this.demo.supportingStrands}.`;
-    note.textContent = `${ideal} ${this.demo.ropeModel === 'newton'
-      ? 'The cable slides over fixed-rotation guides. Guide friction, tendon stretch, damping and motion affect the measured endpoint force.'
+    const ideal = `Ideal static force = (payload + ${this.demo.movingSheaveMass.toFixed(3)} kg of moving wheels) × gravity ÷ ${this.demo.supportingStrands}.`;
+    note.textContent = `${ideal} The reference assumes a massless, frictionless rope at rest. ${this.demo.ropeModel === 'newton'
+      ? 'Measured pull is axial tension in a massless tendon sliding over non-rotating guides.'
       : this.demo.ropeModel === 'vbd'
-      ? 'Measured vertical handle reaction includes rope mass, friction, guide damping and motion. The test handle follows the commanded pull.'
-      : 'Frictionless wrapping and a massless rope; the measured constraint force also responds to acceleration.'}`;
+      ? 'Measured pull is the vertical handle reaction, including cable weight, friction, elasticity and motion.'
+      : 'Measured pull is the constraint reaction; acceleration can change it.'}`;
     about.append(note);
     panel.append(about);
     host.addEventListener('browser-demo-ready', () => {

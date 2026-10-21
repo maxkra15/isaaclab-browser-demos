@@ -4,18 +4,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 export class PulleyPlot {
-  constructor(parent, labels = {}) {
+  constructor(parent) {
     this.samples = [];
     this.container = document.createElement('section');
     this.container.className = 'browser-demo-pulley-plot';
-    this.container.setAttribute('aria-label', labels.ariaLabel || 'Measured pull force and ideal static force');
+    this.container.setAttribute('aria-label', 'Measured pull and ideal static force');
     this.canvas = document.createElement('canvas');
     this.canvas.setAttribute('role', 'img');
     this.canvas.setAttribute('aria-label', 'Cable force in newtons over the last eight seconds of simulation');
     this.legend = document.createElement('div');
     this.legend.className = 'browser-demo-pulley-legend';
     this.values = {};
-    for (const [key, title] of [['measured', labels.measured || 'Measured pull'], ['ideal', labels.ideal || 'Ideal pull']]) {
+    for (const [key, title] of [['measured', 'Measured pull'], ['ideal', 'Ideal static force']]) {
       const item = document.createElement('div');
       item.className = `browser-demo-pulley-${key}`;
       const label = document.createElement('span');
@@ -29,9 +29,9 @@ export class PulleyPlot {
       this.values[key] = value;
     }
     const heading = document.createElement('strong');
-    heading.textContent = labels.title || 'Pull force';
+    heading.textContent = 'Pull force';
     const note = document.createElement('small');
-    note.textContent = labels.note || 'Last 8 s · simulation time';
+    note.textContent = 'Last 8 s · simulation time';
     const header = document.createElement('div');
     header.className = 'browser-demo-pulley-plot-heading';
     header.append(heading, note);

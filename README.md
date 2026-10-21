@@ -15,6 +15,7 @@ CPU WebAssembly, policies run in the browser, and Three.js renders the scenes.
 
 The gallery includes tuning, policy inference, and scripted manipulation. Its
 pulley workshop compares massless ropes, VBD cables, and native Newton tendons.
+All three use 200 g wheels and the same ideal static force reference.
 Only the selected simulation loads. Pause, reset, and scene controls stay in the viewer.
 
 ![Pulley workshop](lab/demos/pulley/preview.jpg)
