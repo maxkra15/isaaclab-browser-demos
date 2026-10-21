@@ -7,6 +7,8 @@
 @import url("./browser-demo-base.css");
 
 .browser-demo-boundary-note { display: block; margin-top: .75rem; color: #536b74; font-size: .75rem; }
+.browser-demo-assembly-progress { position: absolute; right: 12px; bottom: 12px; padding: .45rem .65rem; border: 1px solid #ffffff99; border-radius: 8px; background: #ffffffcc; backdrop-filter: blur(6px); color: #304f5c; font-size: .78rem; font-variant-numeric: tabular-nums; pointer-events: none; }
+.browser-demo-assembly-progress[data-complete="true"] { background: #eff8e6e6; color: #375c00; }
 
 isaaclab-browser-demo [hidden] { display: none !important; }
 .browser-demo-franka-mode { position: absolute; top: 12px; left: 12px; display: flex; gap: 3px; padding: 3px; border: 1px solid #fff9; border-radius: 11px; background: #ffffffa0; backdrop-filter: blur(8px); box-shadow: 0 2px 8px #192e3610; }

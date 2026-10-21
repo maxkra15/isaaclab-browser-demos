@@ -20,10 +20,11 @@ All three use 200 g wheels and the same ideal static force reference.
 Only the selected simulation loads. Pause, reset, and scene controls stay in the viewer.
 
 AlphaNIST uses the published pretrained actor, including its attention encoder
-and history inputs, through ONNX Runtime. Its compact scene leaves one loose
-part beside nine seated fixtures. Drag the loose part to apply a physical
-perturbation; drag the background to orbit. CPU contacts retain the original
-concave triangle meshes instead of the native GPU texture SDFs.
+and history inputs, through ONNX Runtime. All ten parts start loose and dynamic,
+as in the native scene. Drag any part to apply a physical perturbation;
+drag the background to orbit. CPU contacts retain the original
+concave triangle meshes instead of the native GPU texture SDFs. The full scene
+is CPU intensive, and insertions can stall compared with the original GPU task.
 
 ![Pulley workshop](lab/demos/pulley/preview.jpg)
 

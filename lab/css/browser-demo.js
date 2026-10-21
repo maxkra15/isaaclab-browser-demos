@@ -306,11 +306,20 @@ class IsaacLabBrowserDemo extends HTMLElement {
         const hint = document.createElement('small');
         hint.className = 'browser-demo-viewer-hint';
         hint.textContent = this.demo.bodyDrag
-          ? 'Drag the loose part · Drag the background to orbit'
+          ? 'Drag a loose part · Drag the background to orbit'
           : 'Drag the object to pull · Drag the scene to orbit';
         if (!this.franka) this.viewport.append(hint);
       }
       this.setupControls();
+      this.assemblyComplete = false;
+      this.assemblyProgress = null;
+      if (this.demo.assemblyStatus) {
+        this.assemblyProgress = document.createElement('output');
+        this.assemblyProgress.className = 'browser-demo-assembly-progress';
+        this.assemblyProgress.setAttribute('role', 'status');
+        this.assemblyProgress.setAttribute('aria-live', 'polite');
+        this.viewport.append(this.assemblyProgress);
+      }
       if (this.demo.boundaryNote) {
         const note = document.createElement('small');
         note.className = 'browser-demo-boundary-note';
@@ -1206,6 +1215,25 @@ class IsaacLabBrowserDemo extends HTMLElement {
   render() {
     this.viewer.render();
     this.plot?.draw();
+    if (this.assemblyProgress) {
+      const { binding, total } = this.demo.assemblyStatus;
+      const flags = this.simulation.binding(binding);
+      if (flags.length !== total || flags.some((flag) => flag !== 0 && flag !== 1)) {
+        throw new Error('Invalid assembly progress');
+      }
+      const count = flags.reduce((sum, flag) => sum + flag, 0);
+      const complete = count === total;
+      const label = `Assembled ${count} / ${total}`;
+      if (this.assemblyProgress.textContent !== label) this.assemblyProgress.textContent = label;
+      this.assemblyProgress.dataset.complete = String(complete);
+      if (complete && !this.assemblyComplete) {
+        if (this.running) this.querySelector('.browser-demo-pause').click();
+        this.status.textContent = 'Assembly complete';
+      } else if (!complete && this.assemblyComplete) {
+        this.status.textContent = this.running ? 'Running in your browser' : 'Paused';
+      }
+      this.assemblyComplete = complete;
+    }
   }
 
 }
