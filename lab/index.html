@@ -11,17 +11,17 @@ SPDX-License-Identifier: BSD-3-Clause
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Interactive Newton physics and pretrained policy demos for Isaac Lab, running locally in your browser.">
   <title>Isaac Lab interactive demos</title>
-  <link rel="stylesheet" href="css/browser-demo.css?rev=01ee9fecd932">
-  <link rel="stylesheet" href="css/gallery.css?rev=01ee9fecd932">
+  <link rel="stylesheet" href="css/browser-demo.css">
+  <link rel="stylesheet" href="css/gallery.css">
   <script>
     if (new URLSearchParams(location.search).get('embed') === '1') document.documentElement.classList.add('embedded');
   </script>
 </head>
 <body>
   <nav aria-label="Navigation">
-    <a id="gallery-link" href="./?v=01ee9fecd932">Demo gallery</a>
+    <a id="gallery-link" href="./">Demo gallery</a>
     <a href="https://isaac-sim.github.io/IsaacLab/">Isaac Lab documentation</a>
-    <a href="https://github.com/maxkra15/isaaclab-browser-demos/tree/pages/exporters">Source and rebuild instructions</a>
+
   </nav>
   <h1>Isaac Lab interactive demos</h1>
   <p id="description">Tune physics parameters or test a pretrained policy. Pick a demo to explore it live in your browser. No installation needed.</p>
@@ -54,7 +54,7 @@ SPDX-License-Identifier: BSD-3-Clause
     <p id="player-status" role="status" aria-live="polite"></p>
   </section>
   <main id="content"></main>
-  <footer>Experimental preview · Newton physics and policy inference run locally on your CPU through WebAssembly.</footer>
+  <footer>Experimental preview · Newton physics runs through WebAssembly; policy inference runs locally in your browser.</footer>
   <template id="demo-card">
     <a class="card">
       <img alt="" loading="lazy" width="480" height="255">
@@ -65,6 +65,6 @@ SPDX-License-Identifier: BSD-3-Clause
       </div>
     </a>
   </template>
-  <script type="module" src="css/gallery.js?rev=01ee9fecd932"></script>
+  <script type="module" src="css/gallery.js"></script>
 </body>
 </html>

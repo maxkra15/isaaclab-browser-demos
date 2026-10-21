@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import * as THREE from '../../v1/vendor/three.module.min.js';
-import { addIsaacLabGround } from './browser-ground.js?rev=01ee9fecd932';
-import { OrbitCamera } from '../../v6/css/browser-orbit.js';
+import * as THREE from '../vendor/three.module.min.js';
+import { addIsaacLabGround } from './browser-ground.js';
+import { OrbitCamera } from './browser-orbit.js';
 
 export class RobotViewer {
   static async load(canvas, simulation) {

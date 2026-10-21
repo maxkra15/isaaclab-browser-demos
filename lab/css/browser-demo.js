@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos } from '../demos.js?rev=01ee9fecd932';
-import { loadGroundViewer } from './browser-ground.js?rev=01ee9fecd932';
+import { demos } from '../demos.js';
+import { loadGroundViewer } from './browser-ground.js';
 
 const arrayTypes = {
   float32: [Float32Array, 'HEAPF32'], float64: [Float64Array, 'HEAPF64'],
@@ -210,7 +210,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.querySelector('.browser-demo-head strong').textContent = title;
       this.canvas.setAttribute('aria-label', `${title} interactive simulation`);
       if (this.demo.kind === 'pulley') {
-        const { PulleyViewer } = await import('./pulley-viewer.js?rev=01ee9fecd932');
+        const { PulleyViewer } = await import('./pulley-viewer.js');
         const viewer = await PulleyViewer.load(this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
@@ -218,7 +218,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         }
         this.viewer = viewer;
       } else if (this.demo.viewer === 'rigid' || this.demo.kind === 'rigid_friction' || this.demo.kind === 'joint_pd') {
-        const { RigidViewer } = await import('../../v6/css/rigid-viewer.js');
+        const { RigidViewer } = await import('./rigid-viewer.js');
         const viewer = await loadGroundViewer(RigidViewer, this.canvas, this.simulation);
         if (this.generation !== generation) {
           viewer.dispose();
@@ -226,13 +226,13 @@ class IsaacLabBrowserDemo extends HTMLElement {
         }
         this.viewer = viewer;
         if (this.demo.kind === 'joint_pd') {
-          const { JointPdPlot } = await import('../../v1/css/joint-pd-plot.js');
+          const { JointPdPlot } = await import('./joint-pd-plot.js');
           if (this.generation !== generation) return;
           this.plot = new JointPdPlot(this.canvas);
         }
       } else if (this.demo.kind === 'cartpole') {
         const [{ CartpoleViewer }, policy] = await Promise.all([
-          import('../../v1/css/cartpole-viewer.js'), DensePolicy.load(this.simulation.url, this.demo.policy),
+          import('./cartpole-viewer.js'), DensePolicy.load(this.simulation.url, this.demo.policy),
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;
@@ -244,7 +244,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       } else if (!['stiffness', 'cloth_bending', 'mpm'].includes(this.demo.kind)) {
         const [{ RobotViewer }, policy] = await Promise.all([
-          import('./robot-viewer.js?rev=01ee9fecd932'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
+          import('./robot-viewer.js'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
         ]);
         if (this.generation !== generation) return;
         this.policy = policy;
@@ -259,7 +259,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
           this.previousAction = new Float32Array(this.demo.actionIndices?.length || this.demo.jointNames.length);
         }
       } else {
-        const { StiffnessViewer } = await import('../../v1/css/stiffness-viewer.js');
+        const { StiffnessViewer } = await import('./stiffness-viewer.js');
         // The MPM tub's inner floor is z=0; the ground sits beneath its base.
         const groundHeight = this.demo.kind === 'mpm' ? -this.demo.tub.thickness : 0;
         const viewer = await loadGroundViewer(StiffnessViewer, this.canvas, this.simulation, groundHeight);
@@ -270,8 +270,11 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.viewer = viewer;
       }
       if (this.isManipulation) {
-        const { FrankaControl } = await import('./franka-control.js?rev=01ee9fecd932');
-        const source = new URL(demos.find((item) => item.id === this.demo.kind).manualControl, new URL('../', import.meta.url));
+        const { FrankaControl } = await import('./franka-control.js');
+        const catalogSource = demos.find((item) => item.id === this.demo.kind).manualControl;
+        const source = this.demo.manualControl || !catalogSource
+          ? new URL(this.demo.manualControl || 'manual-control.json', this.simulation.url)
+          : new URL(catalogSource, new URL('../', import.meta.url));
         const control = await FrankaControl.load(this.simulation, source);
         if (this.generation !== generation) return;
         this.franka = control;

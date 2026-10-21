@@ -1,74 +1,23 @@
-// Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+// Copyright (c) 2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
 // All rights reserved.
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos as releasedDemos } from '../v6/demos.js';
+const response = await fetch(new URL('./catalog.json', import.meta.url));
+if (!response.ok) throw new Error(`Could not load demo catalog (${response.status})`);
+const catalog = await response.json();
+if (!Array.isArray(catalog.demos)) throw new Error('The demo catalog must contain a demos array.');
 
-export const activities = [
+export const activities = catalog.activities || [
   { id: 'tuning', label: 'Tuning', description: 'Change material, solver or actuator settings and compare the response.' },
   { id: 'policy', label: 'Policy inference', description: 'Steer pretrained policies, move their targets or test their response to a disturbance.' },
   { id: 'scripted', label: 'Scripted scenes', description: 'Explore contact interactions with a programmed controller.' },
 ];
 
-export const physics = [
+export const physics = catalog.physics || [
   { id: 'rigid', label: 'Rigid', description: 'Rigid bodies and robots' },
   { id: 'vbd', label: 'VBD', description: 'Soft bodies, cloth and cables' },
   { id: 'mpm', label: 'MPM', description: 'Particle materials' },
 ];
 
-const releasedCategories = {
-  stiffness: { activity: 'tuning', physics: ['vbd'] },
-  cloth_bending: { activity: 'tuning', physics: ['vbd'] },
-  rigid_friction: { activity: 'tuning', physics: ['rigid'] },
-  joint_pd: { activity: 'tuning', physics: ['rigid'] },
-  mpm: { activity: 'tuning', physics: ['mpm'] },
-  dominoes: { activity: 'tuning', physics: ['rigid'] },
-  cartpole: { activity: 'policy', physics: ['rigid'] },
-  g1: { activity: 'policy', physics: ['rigid'] },
-  anymal: { activity: 'policy', physics: ['rigid'] },
-  franka_reach: { activity: 'policy', physics: ['rigid'] },
-  franka_lift: { activity: 'policy', physics: ['rigid'] },
-  franka_drawer: { activity: 'policy', physics: ['rigid'] },
-  microduck: { activity: 'policy', physics: ['rigid'] },
-};
-
-const existing = releasedDemos.filter((demo) => !['ant', 'cable_bending'].includes(demo.id)).map((demo) => ({
-  ...demo,
-  ...releasedCategories[demo.id],
-  description: demo.id === 'mpm' ? 'Drop 2,744 fine particles onto a cylinder. Try sand, snow, clay, and water references.' : demo.description,
-  assetRoot: demo.id === 'mpm' ? './browser_demos/grains-v1'
-    : demo.id === 'dominoes' ? '../v6/browser_demos' : demo.assetRoot,
-}));
-
-export const demos = [
-  {
-    id: 'pulley', title: 'Pulley workshop', group: 'Mechanisms', activity: 'tuning', physics: ['rigid', 'vbd'],
-    description: 'Try a real VBD cable over one, two or four wheels, or a massless block-and-tackle with up to six supporting strands. Pull the handle and compare measured force with the ideal reference.',
-    assetRoot: './browser_demos/pulley-v1',
-    ropeModels: [
-      {
-        id: 'tendon', label: 'Massless rope', sources: {
-          1: './browser_demos/pulley-v1/pulley_1/manifest.json',
-          2: './browser_demos/pulley-v1/pulley_2/manifest.json',
-          4: './browser_demos/pulley-v1/pulley/manifest.json',
-          6: './browser_demos/pulley-v1/pulley_6/manifest.json',
-        },
-      },
-      {
-        id: 'vbd', label: 'VBD cable', sources: {
-          1: './browser_demos/pulley-vbd-v1/pulley_vbd/manifest.json',
-          2: './browser_demos/pulley-vbd-v1/pulley_vbd_2/manifest.json',
-          4: './browser_demos/pulley-vbd-v1/pulley_vbd_4/manifest.json',
-        },
-      },
-    ],
-  },
-  { id: 'cable_bending', title: 'VBD cable bending', group: 'Deformable lab', activity: 'tuning', physics: ['vbd'], description: 'A shorter clamped cable that settles. Tune stiffness and the tip load.', assetRoot: './browser_demos' },
-  { id: 'franka_cable', title: 'Franka cable policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained policy grasps and lifts a cable through real contacts. Change the target height or take over with keyboard IK.', assetRoot: './browser_demos/cable-policy-v1' },
-  { id: 'franka_soft', title: 'Franka soft-body policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps and lifts a flexible beam. Change the target, tune stiffness, or pull the beam.', assetRoot: './browser_demos/policy-v1' },
-  { id: 'franka_cloth', title: 'Franka cloth policy', group: 'Deformable lab', activity: 'policy', physics: ['rigid', 'vbd'], description: 'A pretrained VBD policy grasps a cloth sheet with real contacts. Change bending or target height and test recovery.', assetRoot: './browser_demos/policy-v1' },
-  { id: 'franka_stack', title: 'Franka cube stacking', group: 'Manipulation', activity: 'scripted', physics: ['rigid'], description: 'Stack cubes with a scripted controller, or take over the arm with keyboard IK.', assetRoot: './browser_demos/teleop-v1' },
-  ...existing,
-].map((demo) => demo.id.startsWith('franka_')
-  ? { ...demo, manualControl: `./browser_demos/${demo.id === 'franka_cable' ? 'cable-policy-v1' : 'teleop-v1'}/${demo.id}.json` } : demo);
+export const demos = catalog.demos.map((demo) => ({ assetRoot: './demos', ...demo }));

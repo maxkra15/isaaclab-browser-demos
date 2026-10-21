@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import * as THREE from '../../v1/vendor/three.module.min.js';
+import * as THREE from '../vendor/three.module.min.js';
 
 const up = new THREE.Vector3(0, 0, 1);
 const poseMatrix = (pose) => new THREE.Matrix4().compose(

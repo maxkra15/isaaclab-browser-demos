@@ -8,27 +8,30 @@ export class PulleyPlot {
     this.samples = [];
     this.container = document.createElement('section');
     this.container.className = 'browser-demo-pulley-plot';
-    this.container.setAttribute('aria-label', 'Measured cable tension and ideal static force');
+    this.container.setAttribute('aria-label', labels.ariaLabel || 'Measured pull force and ideal static force');
     this.canvas = document.createElement('canvas');
+    this.canvas.setAttribute('role', 'img');
     this.canvas.setAttribute('aria-label', 'Cable force in newtons over the last eight seconds of simulation');
     this.legend = document.createElement('div');
     this.legend.className = 'browser-demo-pulley-legend';
     this.values = {};
-    for (const [key, title] of [['ideal', labels.ideal || 'Ideal at rest'], ['measured', labels.measured || 'Measured cable']]) {
+    for (const [key, title] of [['measured', labels.measured || 'Measured pull'], ['ideal', labels.ideal || 'Ideal pull']]) {
       const item = document.createElement('div');
       item.className = `browser-demo-pulley-${key}`;
       const label = document.createElement('span');
       label.textContent = title;
       const value = document.createElement('output');
+      value.setAttribute('aria-label', `${title} in newtons`);
+      value.setAttribute('aria-live', 'off');
       value.value = '— N';
       item.append(label, value);
       this.legend.append(item);
       this.values[key] = value;
     }
     const heading = document.createElement('strong');
-    heading.textContent = labels.title || 'Cable force';
+    heading.textContent = labels.title || 'Pull force';
     const note = document.createElement('small');
-    note.textContent = 'Step average · 8 s of simulation time';
+    note.textContent = labels.note || 'Last 8 s · simulation time';
     const header = document.createElement('div');
     header.className = 'browser-demo-pulley-plot-heading';
     header.append(heading, note);
@@ -60,10 +63,10 @@ export class PulleyPlot {
     const context = this.canvas.getContext('2d');
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
-    const left = 39;
-    const right = width - 12;
-    const top = 12;
-    const bottom = height - 22;
+    const left = 43;
+    const right = width - 14;
+    const top = 13;
+    const bottom = height - 25;
     const end = Math.max(8, this.samples.at(-1)?.time || 0);
     let minimum = 0;
     let maximum = 5;
@@ -76,32 +79,49 @@ export class PulleyPlot {
     maximum = Math.ceil(maximum * 1.08 / interval) * interval;
     const x = (time) => left + (time - end + 8) / 8 * (right - left);
     const y = (force) => bottom - (force - minimum) / (maximum - minimum) * (bottom - top);
-    context.font = '10px system-ui, sans-serif';
+    context.font = '11px system-ui, sans-serif';
     context.textBaseline = 'middle';
-    context.fillStyle = '#738790';
+    context.fillStyle = '#536d78';
     context.lineWidth = 1;
     for (let tick = 0; tick <= 2; tick++) {
       const force = minimum + tick * (maximum - minimum) / 2;
-      context.strokeStyle = '#dbe5e8';
+      context.strokeStyle = '#dfe8eb';
       context.beginPath();
       context.moveTo(left, y(force));
       context.lineTo(right, y(force));
       context.stroke();
-      context.fillText(force.toFixed(Math.abs(force) < 10 ? 1 : 0), 3, y(force));
+      context.textAlign = 'right';
+      context.fillText(force.toFixed(Math.abs(force) < 10 ? 1 : 0), left - 9, y(force));
     }
-    context.fillText('N', 3, height - 9);
-    for (let tick = 0; tick <= 4; tick++) {
-      const position = left + tick / 4 * (right - left);
+    context.fillText('N', left - 9, height - 10);
+    const timeTicks = width < 480 ? 2 : 4;
+    for (let tick = 0; tick <= timeTicks; tick++) {
+      const position = left + tick / timeTicks * (right - left);
+      context.textAlign = tick === 0 ? 'left' : tick === timeTicks ? 'right' : 'center';
+      context.fillText(`${(end - 8 + tick * 8 / timeTicks).toFixed(0)} s`, position, height - 10);
+    }
+
+    context.save();
+    context.beginPath();
+    context.rect(left, top, right - left, bottom - top);
+    context.clip();
+    if (this.samples.length > 1) {
+      const fill = context.createLinearGradient(0, top, 0, bottom);
+      fill.addColorStop(0, '#168bb11c');
+      fill.addColorStop(1, '#168bb103');
+      context.fillStyle = fill;
       context.beginPath();
-      context.moveTo(position, top);
-      context.lineTo(position, bottom);
-      context.stroke();
-      context.fillText(`${(end - 8 + tick * 2).toFixed(0)} s`, position - (tick === 4 ? 16 : 0), height - 9);
+      context.moveTo(x(this.samples[0].time), y(0));
+      for (const sample of this.samples) context.lineTo(x(sample.time), y(sample.measured));
+      context.lineTo(x(this.samples.at(-1).time), y(0));
+      context.closePath();
+      context.fill();
     }
     for (const [key, color] of [['ideal', '#609000'], ['measured', '#168bb1']]) {
       context.strokeStyle = color;
-      context.lineWidth = 2;
+      context.lineWidth = key === 'measured' ? 2.5 : 1.75;
       context.lineJoin = 'round';
+      context.lineCap = 'round';
       context.setLineDash(key === 'ideal' ? [5, 4] : []);
       context.beginPath();
       this.samples.forEach((sample, index) => {
@@ -111,8 +131,20 @@ export class PulleyPlot {
       context.stroke();
     }
     context.setLineDash([]);
+    context.restore();
     const latest = this.samples.at(-1);
-    if (latest) for (const key of ['ideal', 'measured']) this.values[key].value = `${latest[key].toFixed(2)} N`;
+    if (latest) {
+      for (const [key, color] of [['ideal', '#609000'], ['measured', '#168bb1']]) {
+        context.beginPath();
+        context.arc(x(latest.time), y(latest[key]), key === 'measured' ? 3.5 : 3, 0, Math.PI * 2);
+        context.fillStyle = key === 'measured' ? color : '#ffffff';
+        context.strokeStyle = key === 'measured' ? '#ffffff' : color;
+        context.lineWidth = 1.5;
+        context.fill();
+        context.stroke();
+        this.values[key].value = `${latest[key].toFixed(2)} N`;
+      }
+    }
   }
 
   dispose() {

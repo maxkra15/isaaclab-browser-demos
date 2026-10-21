@@ -7,63 +7,36 @@ SPDX-License-Identifier: BSD-3-Clause
 
 # Isaac Lab browser demos
 
-Prototype hosting for interactive Newton demos. Physics and policy inference run
-locally in the browser. The reviewed release is now served by
-[Isaac Lab documentation](https://isaac-sim.github.io/IsaacLab/demos/v1/).
+Generated previews of 19 Isaac Lab demos. Newton physics runs locally through
+CPU WebAssembly, policies run in the browser, and Three.js renders the scenes.
 
-[Open the prototype gallery](https://maxkra15.github.io/isaaclab-browser-demos/lab/).
+[Open the gallery](https://maxkra15.github.io/isaaclab-browser-demos/lab/) ·
+[Try the pulley workshop](https://maxkra15.github.io/isaaclab-browser-demos/lab/?demo=pulley&rope=newton&wheels=4)
 
-## Deformable lab
+The gallery includes tuning, policy inference, and scripted manipulation. Its
+pulley workshop compares massless ropes, VBD cables, and native Newton tendons.
+Only the selected simulation loads. Pause, reset, and scene controls stay in the viewer.
 
-The mutable [lab preview](lab/README.md) runs the published RSL-RL policies for
-Franka VBD beam and cloth lifting. Both use native contact grasps. Change the
-material or target height, open the gripper, or pull the deformable with the mouse.
-The shorter cable demonstrates bending, and contrib cube stacking uses scripted
-Newton IK. Pause and reset are available in every scene.
-Ant is hidden from this preview. These prototypes do not change the official
-Isaac Lab gallery or PRs.
+![Pulley workshop](lab/demos/pulley/preview.jpg)
 
-![Franka soft-body policy](lab/browser_demos/policy-v1/previews/franka_soft.jpg)
+## Embed and preview
 
-## MicroDuck prototype
+Use `lab/?embed=1&demos=all`, or provide a comma-separated list of demo IDs.
+The embedding page can synchronize its theme and size through the gallery bridge.
 
-[Play MicroDuck walking](https://maxkra15.github.io/isaaclab-browser-demos/v2/?demo=microduck).
-Transparent Move/Turn joysticks sit inside the viewport. MicroDuck starts standing in the authored warehouse. Drag sticks to the edge
-to lock a command; pull back or press Escape to stop. Drag the robot to push with 2 N and the background to orbit. Pause and reset
-share the viewport toolbar. Physics uses native BAM servos, the published whole-body
-asset, and MJWarp contacts; the actor is Pollen Robotics' v5 `velstand.onnx`.
-
-![MicroDuck browser scene](v2/browser_demos/previews/microduck.jpg)
-
-See [setup and physics details](v2/README.md) and the
-[exporter](exporters/microduck.py). The exporter reuses `bundle.py` and
-`manipulation.py` from the existing source project/reference implementation;
-its build requires the internal Newton Web compiler. Running the published demo
-requires only a browser.
-
-The [AlphaNIST notes](v2/README.md#alphanist) describe the verified ONNX actor
-conversion and the CUDA texture-SDF dependency that must be addressed for faithful
-browser physics. AlphaNIST is not published as a runnable browser demo yet.
-
-The NVIDIA-maintained source project is
-[Isaac Lab Browser Demos](https://gitlab-master.nvidia.com/omniverse/isaac/isaaclab-browser-demos/-/tree/pages).
-The public [reference source](https://github.com/isaac-sim/IsaacLab/pull/7974)
-records the original exporters and scene adaptations.
-
-Published version directories are retained unchanged. Synchronize the reviewed
-`site/` output from the source project when adding a new version. GitHub Pages
-publishes this repository's `pages` branch with no build dependencies.
-
-## Publish a reviewed release
-
-From this mirror's checkout, copy the static output from the source checkout:
+For local preview, serve this checkout over HTTP:
 
 ```bash
-cp -a /path/to/isaaclab-browser-demos/site/. .
-git diff --check
-git status --short
+python -m http.server 8805
 ```
 
-Review and commit the new version, then push to `pages`. Preserve existing version
-directories and the third-party license notices. No compiler or simulator is
-required to publish an already reviewed release.
+Open `http://localhost:8805/lab/`. GitHub Pages serves the `pages` branch.
+Publish a reviewed, self-contained static export under `lab/`, retaining its
+asset and policy license notices. Older gallery entry points redirect to it.
+
+## Reference implementations
+
+The [original source PR](https://github.com/isaac-sim/IsaacLab/pull/7974) and
+[published snapshots](https://github.com/isaac-sim/IsaacLab/releases/tag/interactive-demos)
+record earlier exporters and scene adaptations. Native tasks and guides live in
+[Isaac Lab documentation](https://isaac-sim.github.io/IsaacLab/).

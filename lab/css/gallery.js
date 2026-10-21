@@ -3,11 +3,11 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import { demos, activities, physics } from '../demos.js?rev=01ee9fecd932';
+import { demos, activities, physics } from '../demos.js';
 
-const revision = '01ee9fecd932';
 const params = new URLSearchParams(location.search);
 const embedded = params.get('embed') === '1';
+const contextual = embedded && params.has('demos') && params.get('demos') !== 'all';
 const content = document.querySelector('#content');
 const player = document.querySelector('#inline-player');
 const playerHost = document.querySelector('#player-host');
@@ -37,7 +37,7 @@ function resize() {
   resizeFrame = requestAnimationFrame(() => {
     resizeFrame = 0;
     // Leave two pixels for fractional layout rounding at iframe boundaries.
-    const height = Math.min(12000, Math.max(1, Math.ceil(document.body.getBoundingClientRect().height) + 2));
+    const height = Math.max(1, Math.ceil(document.body.getBoundingClientRect().height) + 2);
     if (height !== previousHeight) {
       previousHeight = height;
       notify('resize', { height });
@@ -53,6 +53,20 @@ if (embedded) {
         || event.data?.namespace !== 'isaaclab-demos') return;
     if (event.data.type === 'theme' && ['light', 'dark'].includes(event.data.theme)) {
       document.documentElement.dataset.theme = event.data.theme;
+      const properties = {
+        background: ['bg', 'color'], surface: ['surface', 'color'],
+        mutedSurface: ['muted-surface', 'color'], text: ['text', 'color'],
+        muted: ['muted', 'color'], border: ['border', 'color'], accent: ['accent', 'color'],
+        fontFamily: ['font-family', 'font-family'], fontSize: ['font-size', 'font-size'],
+        lineHeight: ['line-height', 'line-height'],
+      };
+      for (const [key, [name, property]] of Object.entries(properties)) {
+        const value = event.data.styles?.[key];
+        if (typeof value === 'string' && CSS.supports(property, value)) {
+          document.documentElement.style.setProperty(`--gallery-${name}`, value);
+        }
+      }
+      resize();
     } else if (event.data.type === 'select' && typeof event.data.demo === 'string') {
       highlightDemo?.(event.data.demo, true);
     }
@@ -66,7 +80,6 @@ function standaloneURL(demo, query = new URLSearchParams(location.search)) {
   url.search = query.toString();
   for (const key of ['embed', 'demos', 'parentOrigin']) url.searchParams.delete(key);
   url.searchParams.set('demo', demo.id);
-  url.searchParams.set('v', revision);
   if (!demo.ropeModels) for (const key of ['rope', 'wheels']) url.searchParams.delete(key);
   return url;
 }
@@ -83,9 +96,8 @@ playerHost.addEventListener('browser-demo-error', (event) => {
 function simulationSource(demo, query) {
   const rope = demo.ropeModels?.find((model) => model.id === query.get('rope'));
   const source = rope?.sources[query.get('wheels')] || rope?.sources[1]
-    || `${demo.assetRoot || './browser_demos'}/${demo.id}/manifest.json`;
+    || demo.manifest || `${demo.assetRoot || './demos'}/${demo.id}/manifest.json`;
   const url = new URL(source, new URL('../', import.meta.url));
-  url.searchParams.set('rev', revision);
   return url;
 }
 
@@ -93,13 +105,14 @@ async function showStandalone(demo) {
   document.title = `${demo.title} · Isaac Lab`;
   document.querySelector('h1').textContent = demo.title;
   document.querySelector('#description').textContent = `${demo.description} Drag to orbit, scroll to zoom, and use the controls to pause or reset.`;
-  await import(`./browser-demo.js?rev=${revision}`);
+  await import('./browser-demo.js');
   const widget = document.createElement('isaaclab-browser-demo');
   widget.setAttribute('src', simulationSource(demo, params));
   content.append(widget);
 }
 
 function showGallery(pool) {
+  document.documentElement.classList.toggle('contextual', contextual);
   content.classList.toggle('single-demo', embedded && pool.length === 1);
   document.querySelector('#gallery-controls').hidden = false;
   const choices = { activity: activities, physics };
@@ -149,7 +162,7 @@ function showGallery(pool) {
     player.scrollIntoView({ block: 'start', behavior: 'instant' });
     resize();
     try {
-      await import(`./browser-demo.js?rev=${revision}`);
+      await import('./browser-demo.js');
       if (generation !== loadGeneration) return;
       const widget = document.createElement('isaaclab-browser-demo');
       widget.setAttribute('src', simulationSource(item, new URL(card.href).searchParams));
@@ -186,11 +199,11 @@ function showGallery(pool) {
       const card = document.querySelector('#demo-card').content.firstElementChild.cloneNode(true);
       card.dataset.demo = item.id;
       card.id = `demo-${item.id}`;
-      card.querySelector('img').src = item.preview || `${item.assetRoot || './browser_demos'}/previews/${item.id}.jpg`;
+      card.querySelector('img').src = item.preview || `${item.assetRoot || './demos'}/${item.id}/preview.jpg`;
       card.querySelector('strong').textContent = item.title;
       card.querySelector('p').textContent = item.description;
       if (embedded) {
-        card.querySelector('.card-arrow').textContent = '▶';
+        card.querySelector('.card-arrow').textContent = '\u25B6\uFE0E';
         card.setAttribute('aria-label', `Run ${item.title}`);
         card.addEventListener('click', (event) => {
           if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -224,7 +237,6 @@ function showGallery(pool) {
   function updateGallery() {
     const query = new URLSearchParams(location.search);
     for (const key of ['demo', 'rope', 'wheels']) query.delete(key);
-    query.set('v', revision);
     for (const key of Object.keys(choices)) {
       filters[key] === 'all' ? query.delete(key) : query.set(key, filters[key]);
     }
@@ -248,8 +260,10 @@ function showGallery(pool) {
       button.disabled = available === 0 && option.id !== 'all' && filters[key] !== option.id;
       label.textContent = available;
     }
-    document.querySelector('#result-count').textContent = `${count} of ${pool.length} demos${embedded ? ' · Select one to run' : ''}`;
+    document.querySelector('#result-count').textContent = `${count} of ${pool.length} demos${embedded && !contextual ? ' · Select one to run' : ''}`;
     clear.hidden = Object.values(filters).every((value) => value === 'all');
+    document.querySelector('#gallery-controls').hidden = contextual
+      && document.querySelector('.filters').hidden && count === pool.length;
     empty.hidden = count > 0;
     if (activeDemo && !matches(pool.find((item) => item.id === activeDemo))) closePlayer();
     resize();
@@ -307,7 +321,6 @@ function showGallery(pool) {
 try {
   const galleryQuery = new URLSearchParams(params);
   for (const key of ['demo', 'rope', 'wheels']) galleryQuery.delete(key);
-  galleryQuery.set('v', revision);
   document.querySelector('#gallery-link').href = `?${galleryQuery}`;
   const selected = demos.find((item) => item.id === params.get('demo'));
   if (!embedded && selected) await showStandalone(selected);

@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-import * as THREE from '../../v1/vendor/three.module.min.js';
+import * as THREE from '../vendor/three.module.min.js';
 
-const assetRoot = new URL('../browser_demos/shared/', import.meta.url);
+const assetRoot = new URL('../shared/', import.meta.url);
 
 export async function addIsaacLabGround(scene, height = 0) {
   const loader = new THREE.TextureLoader();
@@ -48,7 +48,7 @@ export async function addIsaacLabGround(scene, height = 0) {
   };
 }
 
-// Reuse released viewer constructors while keeping current ground assets in this gallery.
+// Attach the shared ground material to viewers with synchronous constructors.
 export async function loadGroundViewer(Viewer, canvas, simulation, height = 0) {
   const viewer = new Viewer(canvas, simulation);
   try {
