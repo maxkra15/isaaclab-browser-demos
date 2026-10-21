@@ -146,8 +146,22 @@ function showGallery(pool) {
     resize();
   }
   document.querySelector('#close-player').addEventListener('click', () => closePlayer(true));
+  playerHost.addEventListener('browser-demo-ready', (event) => {
+    const item = pool.find((entry) => entry.id === activeDemo);
+    if (!item || event.target !== playerHost.firstElementChild) return;
+    const url = new URL(location.href);
+    url.searchParams.set('demo', item.id);
+    if (item.ropeModels) {
+      url.searchParams.set('rope', event.target.demo.ropeModel || 'tendon');
+      url.searchParams.set('wheels', event.target.demo.supportingStrands);
+    }
+    history.replaceState(null, '', url);
+    updateGallery();
+    document.querySelector('#player-standalone').href = standaloneURL(item);
+  });
 
   async function startDemo(item, card) {
+    const selection = new URL(card.href).searchParams;
     closePlayer();
     activeDemo = item.id;
     const generation = loadGeneration;
@@ -165,11 +179,14 @@ function showGallery(pool) {
       await import('./browser-demo.js');
       if (generation !== loadGeneration) return;
       const widget = document.createElement('isaaclab-browser-demo');
-      widget.setAttribute('src', simulationSource(item, new URL(card.href).searchParams));
+      widget.setAttribute('src', simulationSource(item, selection));
       playerHost.append(widget);
-      const query = new URLSearchParams(location.search);
-      query.set('demo', item.id);
-      history.replaceState(null, '', `?${query}`);
+      const url = new URL(location.href);
+      url.searchParams.set('demo', item.id);
+      for (const key of ['rope', 'wheels']) {
+        selection.has(key) ? url.searchParams.set(key, selection.get(key)) : url.searchParams.delete(key);
+      }
+      history.replaceState(null, '', url);
     } catch (error) {
       if (generation !== loadGeneration) return;
       playerStatus.textContent = `Could not start: ${error.message}. Try opening the full view.`;
@@ -235,7 +252,8 @@ function showGallery(pool) {
   content.append(empty);
 
   function updateGallery() {
-    const query = new URLSearchParams(location.search);
+    const selection = new URLSearchParams(location.search);
+    const query = new URLSearchParams(selection);
     for (const key of ['demo', 'rope', 'wheels']) query.delete(key);
     for (const key of Object.keys(choices)) {
       filters[key] === 'all' ? query.delete(key) : query.set(key, filters[key]);
@@ -245,7 +263,10 @@ function showGallery(pool) {
       card.hidden = !matches(item);
       if (!card.hidden) count += 1;
       const link = new URLSearchParams(query);
-      if (filters.physics === 'vbd' && item.ropeModels) link.set('rope', 'vbd');
+      if (item.ropeModels && item.id === selection.get('demo')) {
+        for (const key of ['rope', 'wheels']) if (selection.has(key)) link.set(key, selection.get(key));
+      }
+      if (filters.physics === 'vbd' && item.ropeModels && !link.has('rope')) link.set('rope', 'vbd');
       card.href = standaloneURL(item, link);
     }
     for (const { activity, section, count: label } of sections) {
