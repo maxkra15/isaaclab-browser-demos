@@ -75,6 +75,10 @@ class BrowserSimulation {
     if (!this.stepNative()) throw new Error('Simulation step failed');
   }
 
+  set(name, values) {
+    this.binding(name).set(values);
+  }
+
   reset() {
     if (!this.resetNative()) throw new Error('Simulation reset failed');
   }
@@ -137,6 +141,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
   connectedCallback() {
     if (this.observer) return;
     this.generation = (this.generation || 0) + 1;
+    this.policyEpoch = (this.policyEpoch || 0) + 1;
     const generation = this.generation;
     this.visible = false;
     this.observer = new IntersectionObserver(([entry]) => {
@@ -151,6 +156,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
 
   updateVisibility() {
     if (!this.isConnected || !this.visible || document.hidden) {
+      this.policyEpoch += 1;
       cancelAnimationFrame(this.frameId);
       this.frameId = 0;
       this.releaseControls?.();
@@ -158,7 +164,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       return;
     }
     if (!this.loading) this.loading = this.load(this.generation);
-    else if (this.ready && !this.failed && !this.frameId) {
+    else if (this.ready && !this.failed && !this.frameId && !this.inPolicyFrame) {
       this.previousTime = performance.now();
       this.frameId = requestAnimationFrame((time) => this.frame(time));
     }
@@ -166,6 +172,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
 
   disconnectedCallback() {
     this.generation += 1;
+    this.policyEpoch += 1;
     this.ready = false;
     this.observer?.disconnect();
     this.observer = null;
@@ -180,6 +187,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.plot = null;
     this.viewer?.dispose();
     this.viewer = null;
+    this.policy?.dispose?.().catch(console.error);
+    this.policy = null;
     this.simulation?.dispose();
     this.simulation = null;
     this.loading = null;
@@ -243,10 +252,16 @@ class IsaacLabBrowserDemo extends HTMLElement {
         }
         this.viewer = viewer;
       } else if (!['stiffness', 'cloth_bending', 'mpm'].includes(this.demo.kind)) {
-        const [{ RobotViewer }, policy] = await Promise.all([
-          import('./robot-viewer.js'), this.demo.policy ? DensePolicy.load(this.simulation.url, this.demo.policy) : null,
-        ]);
+        const { RobotViewer } = await import('./robot-viewer.js');
         if (this.generation !== generation) return;
+        const description = this.demo.policy;
+        const policy = description?.format === 'onnx'
+          ? await import('../policy.js').then(({ Policy }) => Policy.load(description, simulation.url, simulation))
+          : description ? await DensePolicy.load(simulation.url, description) : null;
+        if (this.generation !== generation) {
+          await policy?.dispose?.();
+          return;
+        }
         this.policy = policy;
         const viewer = await RobotViewer.load(this.canvas, this.simulation);
         if (this.generation !== generation) {
@@ -254,7 +269,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
           return;
         }
         this.viewer = viewer;
-        if (!this.isManipulation) {
+        if (!this.isManipulation && this.demo.policy?.format !== 'onnx') {
           this.command = this.demo.policyType === 'microduck' ? this.simulation.binding('command') : new Float32Array(3);
           this.previousAction = new Float32Array(this.demo.actionIndices?.length || this.demo.jointNames.length);
         }
@@ -283,14 +298,16 @@ class IsaacLabBrowserDemo extends HTMLElement {
       }
       this.tick = 0;
       this.elapsed = 0;
-      if (this.demo.softDrag || this.franka) {
+      if (this.demo.softDrag || this.demo.bodyDrag || this.franka) {
         this.viewport = document.createElement('div');
         this.viewport.className = 'browser-demo-viewport';
         this.canvas.before(this.viewport);
         this.viewport.append(this.canvas);
         const hint = document.createElement('small');
         hint.className = 'browser-demo-viewer-hint';
-        hint.textContent = 'Drag the object to pull · Drag the scene to orbit';
+        hint.textContent = this.demo.bodyDrag
+          ? 'Drag the loose part · Drag the background to orbit'
+          : 'Drag the object to pull · Drag the scene to orbit';
         if (!this.franka) this.viewport.append(hint);
       }
       this.setupControls();
@@ -315,6 +332,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.plot = null;
       this.viewer?.dispose();
       this.viewer = null;
+      this.policy?.dispose?.().catch(console.error);
+      this.policy = null;
       this.simulation?.dispose();
       this.simulation = null;
       this.status.textContent = `Could not start: ${error.message}`;
@@ -488,7 +507,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       hint.textContent = 'Hold to perturb the cart. Release to see the policy respond.';
       forceCard.append(hint);
       panel.append(forceCard);
-    } else {
+    } else if (this.demo.policy?.format !== 'onnx') {
       this.addVelocityControls();
     }
     const buttons = document.createElement('div');
@@ -500,6 +519,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
     pause.title = 'Pause simulation';
     pause.addEventListener('click', () => {
       this.running = !this.running;
+      this.policyEpoch += 1;
+      if (!this.running) this.viewer.releasePush?.();
       if (this.franka && !this.running) this.franka.stop();
       pause.textContent = this.running ? 'Pause' : 'Play';
       pause.title = `${pause.textContent} simulation`;
@@ -752,9 +773,11 @@ class IsaacLabBrowserDemo extends HTMLElement {
   }
 
   resetSimulation() {
+    this.policyEpoch += 1;
     const recovering = this.failed;
     if (this.pendingMaterial) this.simulation.binding('material').set(this.pendingMaterial);
     this.simulation.reset();
+    this.policy?.reset?.();
     this.viewer.releasePush?.();
     if (this.demo.policyType === 'microduck') this.command = this.simulation.binding('command');
     this.previousAction?.fill(0);
@@ -1073,7 +1096,53 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.simulation.binding('force')[0] = this.policyForce + this.perturbation;
   }
 
+  async framePolicy(time) {
+    this.frameId = 0;
+    if (this.inPolicyFrame || !this.ready || this.failed || !this.isConnected || !this.visible || document.hidden) return;
+    this.inPolicyFrame = true;
+    const epoch = this.policyEpoch;
+    const generation = this.generation;
+    const simulation = this.simulation;
+    const policy = this.policy;
+    try {
+      if (this.running) {
+        const timestep = simulation.manifest.timestep;
+        const maxSteps = this.demo.maxStepsPerFrame || 4;
+        this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, .05), maxSteps * timestep);
+        const steps = Math.min(maxSteps, Math.floor(this.elapsed / timestep));
+        for (let index = 0; index < steps; index += 1) {
+          const result = await policy.evaluate(simulation);
+          if (epoch !== this.policyEpoch || generation !== this.generation || !this.isConnected
+              || !this.visible || document.hidden || !this.running) return;
+          policy.apply(result, simulation);
+          simulation.step();
+          this.tick += 1;
+          this.elapsed -= timestep;
+          const fallen = this.demo.terminationHeight !== undefined
+            && !(simulation.binding('body_q')[this.demo.rootBody * 7 + 2] >= this.demo.terminationHeight);
+          if ((this.demo.cycleSteps && this.tick >= this.demo.cycleSteps) || fallen) {
+            this.resetSimulation();
+            break;
+          }
+        }
+      }
+      if (!this.demo.renderFPS || time - (this.lastRenderTime || 0) >= 1000 / this.demo.renderFPS) {
+        this.render();
+        this.lastRenderTime = time;
+      }
+      this.previousTime = time;
+    } catch (error) {
+      if (epoch === this.policyEpoch && generation === this.generation && this.isConnected) this.failFrame(error);
+    } finally {
+      this.inPolicyFrame = false;
+      if (this.ready && !this.failed && this.isConnected && this.visible && !document.hidden && !this.frameId) {
+        this.frameId = requestAnimationFrame((next) => this.frame(next));
+      }
+    }
+  }
+
   frame(time) {
+    if (this.policy?.evaluate) return this.framePolicy(time);
     if (!this.isConnected || !this.visible || document.hidden) {
       this.frameId = 0;
       return;
@@ -1120,13 +1189,18 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.previousTime = time;
       this.frameId = requestAnimationFrame((next) => this.frame(next));
     } catch (error) {
-      this.failed = true;
-      this.frameId = 0;
-      this.status.textContent = `Simulation stopped: ${error.message}`;
-      this.status.classList.add('browser-demo-error');
-      this.dispatchEvent(new CustomEvent('browser-demo-error', { bubbles: true, detail: { message: error.message } }));
-      console.error(error);
+      this.failFrame(error);
     }
+  }
+
+  failFrame(error) {
+    this.failed = true;
+    this.frameId = 0;
+    this.viewer.releasePush?.();
+    this.status.textContent = `Simulation stopped: ${error.message}`;
+    this.status.classList.add('browser-demo-error');
+    this.dispatchEvent(new CustomEvent('browser-demo-error', { bubbles: true, detail: { message: error.message } }));
+    console.error(error);
   }
 
   render() {

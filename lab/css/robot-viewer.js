@@ -6,6 +6,7 @@
 import * as THREE from '../vendor/three.module.min.js';
 import { addIsaacLabGround } from './browser-ground.js';
 import { OrbitCamera } from './browser-orbit.js';
+import { BodyDrag } from './body-drag.js';
 
 export class RobotViewer {
   static async load(canvas, simulation) {
@@ -62,7 +63,7 @@ export class RobotViewer {
     this.simulation = simulation;
     this.isAnymal = simulation.manifest.isaacLabDemo.kind === 'anymal';
     this.demo = simulation.manifest.isaacLabDemo;
-    this.isManipulation = this.demo.kind.startsWith('franka_');
+    this.isManipulation = this.demo.kind.startsWith('franka_') || this.demo.taskType === 'manipulation';
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -182,6 +183,13 @@ export class RobotViewer {
     if (this.demo.scene === 'courtyard') this.addCourtyard();
     if (this.demo.scene === 'warehouse') this.scene.fog = new THREE.Fog('#f3f6f7', 14, 28);
     if (this.demo.pushMaxForce) this.addMousePush();
+    if (this.demo.bodyDrag) {
+      this.bodyDrag = new BodyDrag(canvas, simulation, this.camera, this.scene, this.bodies, this.demo.bodyDrag.bodies);
+      const release = this.releasePush;
+      const dispose = this.disposePush;
+      this.releasePush = () => { release?.(); this.bodyDrag.release(); };
+      this.disposePush = () => { dispose?.(); this.bodyDrag.dispose(); };
+    }
   }
 
   addCourtyard() {
@@ -419,6 +427,7 @@ export class RobotViewer {
     this.key.target.position.set(pose[root] + (this.workbench ? 0.45 : 0), 0, -pose[root + 1]);
     this.key.target.updateMatrixWorld();
     this.orbit.update(this.target);
+    this.bodyDrag?.render();
     this.renderer.render(this.scene, this.camera);
   }
 

@@ -1,6 +1,17 @@
 {
   "demos": [
     {
+      "id": "alphanist",
+      "title": "AlphaNIST assembly policy",
+      "group": "Manipulation",
+      "activity": "policy",
+      "physics": [
+        "rigid"
+      ],
+      "policyRuntime": "onnx",
+      "description": "A pretrained assembly policy tackles one loose part on a populated NIST board. Drag the part to perturb its approach."
+    },
+    {
       "id": "pulley",
       "title": "Pulley workshop",
       "group": "Mechanisms",
