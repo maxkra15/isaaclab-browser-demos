@@ -52,7 +52,7 @@ export class BodyDrag {
         event.stopImmediatePropagation();
         return;
       }
-      if (event.button !== 0 || !this.project(event)) return;
+      if (event.button !== 0 || event.shiftKey || !this.project(event)) return;
       const hit = this.raycaster.intersectObjects(bodies, true)[0];
       if (!hit) return;
       let group = hit.object;

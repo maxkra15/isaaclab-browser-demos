@@ -76,7 +76,8 @@ export class RobotViewer {
     this.camera = new THREE.PerspectiveCamera(42, 1, 0.05, 50);
     this.target = new THREE.Vector3();
     this.orbit = new OrbitCamera(canvas, this.camera, this.demo.cameraAzimuth ?? (this.isManipulation ? -2.2 : Math.PI),
-      this.isManipulation ? 0.45 : 0.28, this.demo.cameraRadius || (this.isAnymal ? 2.4 : 3.0));
+      this.demo.cameraElevation ?? (this.isManipulation ? 0.45 : 0.28),
+      this.demo.cameraRadius || (this.isAnymal ? 2.4 : 3.0), Boolean(this.demo.cameraPan));
 
     const microduck = this.demo.kind === 'microduck';
     this.workbench = this.demo.scene === 'workbench' || (this.isManipulation && !this.demo.policy);
@@ -129,14 +130,16 @@ export class RobotViewer {
       geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
       geometry.setIndex(new THREE.BufferAttribute(indices, 1));
       if (visual.uvOffset !== undefined) geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(data, visual.uvOffset, visual.vertexCount * 2), 2));
-      geometry.computeVertexNormals();
+      if (visual.normalOffset !== undefined) {
+        geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(data, visual.normalOffset, visual.vertexCount * 3), 3));
+      } else geometry.computeVertexNormals();
       let material = materials[visual.material];
       if (visual.color) {
-        const name = JSON.stringify([visual.color, visual.texture, visual.roughness, visual.opacity, visual.flatShading]);
+        const name = JSON.stringify([visual.color, visual.texture, visual.roughness, visual.metalness, visual.opacity, visual.flatShading]);
         if (!materials[name]) {
           materials[name] = new THREE.MeshStandardMaterial({
             color: new THREE.Color().setRGB(...visual.color),
-            roughness: visual.roughness ?? (microduck ? 0.5 : 0.6), metalness: microduck ? 0 : 0.05,
+            roughness: visual.roughness ?? (microduck ? 0.5 : 0.6), metalness: visual.metalness ?? (microduck ? 0 : 0.05),
             flatShading: visual.flatShading ?? microduck,
             opacity: visual.opacity ?? 1, transparent: (visual.opacity ?? 1) < 1,
             side: visual.body < 0 ? THREE.DoubleSide : THREE.FrontSide,

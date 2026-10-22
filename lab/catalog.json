@@ -9,7 +9,7 @@
         "rigid"
       ],
       "policyRuntime": "onnx",
-      "description": "A pretrained policy inserts one round and two rectangular pegs. Drag a part to perturb its approach."
+      "description": "A pretrained policy inserts three loose pegs on a complete NIST board. Drag a loose peg to perturb its approach."
     },
     {
       "id": "pulley",

@@ -306,7 +306,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
         const hint = document.createElement('small');
         hint.className = 'browser-demo-viewer-hint';
         hint.textContent = this.demo.bodyDrag
-          ? 'Drag a loose part · Drag the background to orbit'
+          ? this.demo.cameraPan ? 'Drag part · Drag background to orbit · Shift-drag to pan · Double-click to center'
+            : 'Drag a loose part · Drag the background to orbit'
           : 'Drag the object to pull · Drag the scene to orbit';
         if (!this.franka) this.viewport.append(hint);
       }
@@ -1117,7 +1118,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
       if (this.running) {
         const timestep = simulation.manifest.timestep;
         const maxSteps = this.demo.maxStepsPerFrame || 4;
-        this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, .05), maxSteps * timestep);
+        const frameTimeLimit = Math.max(.05, maxSteps * timestep);
+        this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, frameTimeLimit), maxSteps * timestep);
         const steps = Math.min(maxSteps, Math.floor(this.elapsed / timestep));
         for (let index = 0; index < steps; index += 1) {
           const result = await policy.evaluate(simulation);

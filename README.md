@@ -23,8 +23,11 @@ AlphaNIST uses the published pretrained actor through ONNX Runtime for three
 simple insertions: one round and two rectangular pegs. All three start loose,
 dynamic, and draggable. Small convex peg colliders preserve the native tip
 chamfers; compound socket walls retain the measured clearances. The native
-completion criteria remain. Drag a part to perturb the policy, or the background
-to orbit. The full ten-part benchmark remains in native Isaac Lab.
+completion criteria remain. Full CAD geometry, normals, and materials show the
+other 16 assemblies already seated as display objects. Orbit and zoom focus on
+the board center. Drag a loose part to perturb the policy, Shift-drag or
+right-drag to pan, and double-click to recenter. The full ten-part benchmark
+remains in native Isaac Lab.
 
 ![Pulley workshop](lab/demos/pulley/preview.jpg)
 
