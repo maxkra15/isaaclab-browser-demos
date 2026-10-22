@@ -40,6 +40,7 @@ export class FrankaControl {
   constructor(simulation, description) {
     this.simulation = simulation;
     this.description = description;
+    this.armJointCount = description.armJointCount || 7;
     this.chain = description.chain.map((step) => ({
       ...step, parent: poseMatrix(step.parent), child: poseMatrix(step.child).invert(),
       axis: step.axis ? new THREE.Vector3().fromArray(step.axis).normalize() : null,
@@ -54,7 +55,7 @@ export class FrankaControl {
     this.position = new THREE.Vector3();
     this.orientation = new THREE.Quaternion();
     this.offset = new THREE.Vector3().fromArray(description.offset);
-    this.joints = Array.from({ length: 7 }, () => ({ position: new THREE.Vector3(), axis: new THREE.Vector3() }));
+    this.joints = Array.from({ length: this.armJointCount }, () => ({ position: new THREE.Vector3(), axis: new THREE.Vector3() }));
     this.takeover();
     const actual = this.actualPose();
     this.forward(simulation.binding('joint_q'));
@@ -98,7 +99,9 @@ export class FrankaControl {
     this.target.copy(pose.position);
     this.rotation.copy(pose.rotation);
     const { qIndices, limits } = this.description;
-    this.gripOpen = this.simulation.binding('joint_q')[qIndices[7]] > (limits[7][0] + limits[7][1]) / 2;
+    this.gripOpen = this.description.gripper !== 'none'
+      && this.simulation.binding('joint_q')[qIndices[this.armJointCount]]
+        > (limits[this.armJointCount][0] + limits[this.armJointCount][1]) / 2;
   }
 
   stop() {
@@ -152,7 +155,8 @@ export class FrankaControl {
       return -torque / this.description.stiffness[joint];
     });
     this.q.set(current);
-    const jacobian = new Float64Array(42), error = new Float64Array(6);
+    const count = this.armJointCount;
+    const jacobian = new Float64Array(6 * count), error = new Float64Array(6);
     for (let iteration = 0; iteration < 6; iteration++) {
       this.forward(this.q);
       const positionError = this.target.clone().sub(this.position).clampLength(0, .025);
@@ -163,22 +167,22 @@ export class FrankaControl {
       const angle = sine > 1e-8 ? 2 * Math.atan2(sine, rotationError.w) / sine : 2;
       error.set([positionError.x, positionError.y, positionError.z,
         .3 * rotationError.x * angle, .3 * rotationError.y * angle, .3 * rotationError.z * angle]);
-      for (let column = 0; column < 7; column++) {
+      for (let column = 0; column < count; column++) {
         const { axis, position } = this.joints[column];
         const linear = axis.clone().cross(this.position.clone().sub(position));
         [linear.x, linear.y, linear.z, .3 * axis.x, .3 * axis.y, .3 * axis.z]
-          .forEach((value, row) => { jacobian[row * 7 + column] = value; });
+          .forEach((value, row) => { jacobian[row * count + column] = value; });
       }
       const system = new Float64Array(36);
       for (let row = 0; row < 6; row++) for (let column = 0; column < 6; column++) {
         let sum = row === column ? .025 ** 2 : 0;
-        for (let joint = 0; joint < 7; joint++) sum += jacobian[row * 7 + joint] * jacobian[column * 7 + joint];
+        for (let joint = 0; joint < count; joint++) sum += jacobian[row * count + joint] * jacobian[column * count + joint];
         system[row * 6 + column] = sum;
       }
       const gradient = solve(system, error);
-      for (let joint = 0; joint < 7; joint++) {
+      for (let joint = 0; joint < count; joint++) {
         let change = 0;
-        for (let row = 0; row < 6; row++) change += jacobian[row * 7 + joint] * gradient[row];
+        for (let row = 0; row < 6; row++) change += jacobian[row * count + joint] * gradient[row];
         const coordinate = this.description.qIndices[joint];
         const [lower, upper] = this.description.limits[joint];
         this.q[coordinate] = THREE.MathUtils.clamp(this.q[coordinate] + THREE.MathUtils.clamp(change, -.15, .15), lower + .001, upper - .001);
@@ -186,8 +190,8 @@ export class FrankaControl {
     }
     const { binding, qIndices, defaults, actionMode, actionScale, gripper, limits } = this.description;
     const action = this.simulation.binding(binding);
-    const velocity = this.simulation.binding('joint_qd');
-    for (let joint = 0; joint < 7; joint++) {
+    const velocity = this.simulation.binding(this.description.velocityBinding || 'joint_qd');
+    for (let joint = 0; joint < count; joint++) {
       const coordinate = qIndices[joint];
       const target = current[coordinate] + this.description.motionGain
         * THREE.MathUtils.clamp(this.q[coordinate] - current[coordinate], -1.2 * dt, 1.2 * dt);
@@ -196,11 +200,11 @@ export class FrankaControl {
       action[joint] = actionMode === 'relative' ? (desired - current[coordinate]) / actionScale
         : actionMode === 'absolute' ? (desired - defaults[joint]) / actionScale : desired;
     }
-    const opening = this.gripOpen ? limits[7][1] : limits[7][0];
-    if (gripper === 'relative' || gripper === 'position') for (let joint = 7; joint < 9; joint++) {
+    const opening = gripper === 'none' ? 0 : this.gripOpen ? limits[count][1] : limits[count][0];
+    if (gripper === 'relative' || gripper === 'position') for (let joint = count; joint < qIndices.length; joint++) {
       action[joint] = gripper === 'relative' ? (opening - current[qIndices[joint]]) / actionScale : opening;
     }
-    else if (gripper !== 'none') action[7] = this.gripOpen ? 1 : -1;
+    else if (gripper !== 'none') action[count] = this.gripOpen ? 1 : -1;
     if (!action.every(Number.isFinite)) throw new Error('Manual controller produced a non-finite target');
   }
 }

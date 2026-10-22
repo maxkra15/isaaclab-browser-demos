@@ -193,15 +193,19 @@
       ]
     },
     {
-      "id": "franka_reach",
-      "title": "Franka reach",
+      "id": "ur10_reach",
+      "aliases": [
+        "franka_reach"
+      ],
+      "policyRuntime": "onnx",
+      "title": "UR10 reach",
       "group": "Manipulation",
       "description": "Move the target and watch a pretrained joint-position policy reach for it.",
       "activity": "policy",
       "physics": [
         "rigid"
       ],
-      "manualControl": "./demos/franka_reach/manual-control.json"
+      "manualControl": "./demos/ur10_reach/manual-control.json"
     },
     {
       "id": "franka_lift",
@@ -216,9 +220,9 @@
     },
     {
       "id": "franka_drawer",
-      "title": "Franka drawer opening",
+      "title": "Franka drawer control",
       "group": "Manipulation",
-      "description": "Play, pause, and reset a pretrained drawer-opening policy.",
+      "description": "Open with a pretrained policy, close with a physical return controller, or take over with keyboard IK. The lower drawer and doors stay fixed.",
       "activity": "policy",
       "physics": [
         "rigid"

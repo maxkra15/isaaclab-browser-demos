@@ -213,7 +213,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       this.simulation = simulation;
       this.demo = this.simulation.manifest.isaacLabDemo;
       if (!this.demo || !demos.some((item) => item.id === this.demo.kind)) throw new Error('Unknown Isaac Lab demo');
-      this.isManipulation = this.demo.kind.startsWith('franka_');
+      this.isManipulation = Boolean(this.demo.manualControl || demos.find((item) => item.id === this.demo.kind).manualControl);
       this.querySelector('.browser-demo').classList.add(`browser-demo-${this.demo.kind}`, `browser-demo-scene-${this.demo.scene || "default"}`);
       const title = this.getAttribute('demo-title') || this.demo.title;
       this.querySelector('.browser-demo-head strong').textContent = title;
@@ -328,9 +328,15 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.append(note);
         this.boundaryNote = note;
       }
-      this.running = true;
+      this.running = !this.demo.startPaused;
       this.previousTime = performance.now();
-      this.status.textContent = 'Running in your browser';
+      this.status.textContent = this.running ? 'Running in your browser' : 'Choose Open to start';
+      if (!this.running) {
+        const pause = this.querySelector('.browser-demo-pause');
+        pause.textContent = 'Play';
+        pause.title = 'Play simulation';
+        pause.setAttribute('aria-label', pause.title);
+      }
       this.render();
       this.ready = true;
       this.updateVisibility();
@@ -559,14 +565,19 @@ class IsaacLabBrowserDemo extends HTMLElement {
     toolbar.setAttribute('role', 'group');
     toolbar.setAttribute('aria-label', 'Arm controller');
     this.modeButtons = [];
-    for (const mode of [this.policy ? 'policy' : 'scripted', 'manual']) {
+    const modes = this.demo.drawerControl ? ['policy', 'return', 'manual'] : [this.policy ? 'policy' : 'scripted', 'manual'];
+    for (const mode of modes) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.textContent = mode[0].toUpperCase() + mode.slice(1);
+      button.textContent = this.demo.drawerControl && mode === 'policy' ? 'Open'
+        : mode === 'return' ? 'Close' : mode[0].toUpperCase() + mode.slice(1);
       button.title = mode === 'manual' ? 'Control the end effector with keyboard IK'
-        : mode === 'scripted' ? 'Restart the stacking sequence' : 'Let the pretrained policy take control';
+        : mode === 'return' ? 'Close with a physical return controller; the policy only learns opening'
+          : mode === 'scripted' ? 'Restart the stacking sequence' : 'Let the pretrained policy take control';
       button.addEventListener('click', () => {
+        if (this.demo.drawerControl) { this.startDrawer(mode); return; }
         if (this.controlMode === mode) return;
+        this.policyEpoch += 1;
         this.controlMode = mode;
         if (mode === 'scripted') this.resetSimulation();
         else if (mode === 'manual') this.franka.takeover();
@@ -662,6 +673,7 @@ class IsaacLabBrowserDemo extends HTMLElement {
       }
     }
     for (const parameter of this.simulation.manifest.parameters || []) {
+      if (this.demo.commandRange && parameter.binding === 'command') continue;
       let container = this.frankaAutoSettings;
       if (parameter.binding === 'material') {
         const details = document.createElement('details');
@@ -683,7 +695,76 @@ class IsaacLabBrowserDemo extends HTMLElement {
     }
     if (this.frankaAutoSettings.children.length) panel.prepend(this.frankaAutoSettings);
     this.frankaPanel = panel;
+    if (this.demo.drawerControl) this.resetDrawerControl();
     this.updateFrankaControls();
+  }
+
+  resetDrawerControl() {
+    this.controlMode = 'hold';
+    this.drawerPath = [this.drawerCurrentTarget()];
+    this.simulation.binding('manual_target').set(this.drawerPath[0]);
+    this.drawerReturnIndex = 0;
+  }
+
+  drawerCurrentTarget() {
+    const q = this.simulation.binding('joint_q');
+    return Float32Array.from(this.franka.description.qIndices, (index) => q[index]);
+  }
+
+  startDrawer(mode) {
+    if (mode === this.controlMode) {
+      if (!this.running) this.querySelector('.browser-demo-pause').click();
+      return;
+    }
+    this.policyEpoch += 1;
+    this.franka.keys.clear();
+    if (mode === 'manual') {
+      this.drawerPath = [];
+      this.franka.takeover();
+    } else if (mode === 'policy') {
+      if (this.controlMode === 'return') this.drawerPath.length = Math.max(1, Math.ceil(this.drawerReturnIndex) + 1);
+      if (!this.drawerPath.length) this.drawerPath = [this.drawerCurrentTarget()];
+    } else {
+      if (this.drawerPath.length < 2) return;
+      this.drawerReturnIndex = this.drawerPath.length - 1;
+    }
+    this.controlMode = mode;
+    this.updateFrankaControls();
+    if (!this.running) this.querySelector('.browser-demo-pause').click();
+    if (mode === 'manual') this.canvas.focus({ preventScroll: true });
+    this.render();
+  }
+
+  stepDrawerReturn() {
+    const cursor = Math.max(0, this.drawerReturnIndex);
+    const lower = Math.floor(cursor), upper = Math.ceil(cursor), fraction = cursor - lower;
+    const target = this.simulation.binding('manual_target');
+    for (let joint = 0; joint < target.length; joint++) {
+      target[joint] = this.drawerPath[lower][joint] * (1 - fraction) + this.drawerPath[upper][joint] * fraction;
+    }
+    this.drawerReturnIndex -= .5;
+  }
+
+  sampleDrawer() {
+    if (this.controlMode === 'policy') {
+      this.drawerPath.push(Float32Array.from(this.simulation.binding('arm_target')));
+      if (this.drawerPath.length === 2) this.updateFrankaControls();
+    }
+    const position = this.simulation.binding('joint_q')[this.demo.drawerCoordinate];
+    const open = this.controlMode === 'policy' && position >= this.demo.drawerOpenPosition;
+    const velocity = this.simulation.binding('joint_qd')[this.demo.drawerVelocityIndex];
+    const closed = this.controlMode === 'return' && this.drawerReturnIndex <= 0
+      && Math.abs(position) <= .005 && Math.abs(velocity) <= .01;
+    const exhausted = this.controlMode === 'policy' && this.drawerPath.length > 16 / this.simulation.manifest.timestep
+      || this.controlMode === 'return' && this.drawerReturnIndex < -1 / this.simulation.manifest.timestep;
+    if (open || closed || exhausted) {
+      if (this.running) this.querySelector('.browser-demo-pause').click();
+      this.status.textContent = open ? 'Top drawer open' : closed ? 'Top drawer closed' : 'Motion finished · use Manual or Reset';
+      this.simulation.binding('manual_target').set(this.simulation.binding('arm_target'));
+      this.controlMode = 'hold';
+      if (closed) this.drawerPath = [];
+      this.updateFrankaControls();
+    }
   }
 
   settleFranka() {
@@ -702,7 +783,12 @@ class IsaacLabBrowserDemo extends HTMLElement {
     const manual = this.controlMode === 'manual';
     const gripper = this.franka.description.gripper !== 'none';
     this.viewport.dataset.controlMode = this.controlMode;
-    for (const { mode, button } of this.modeButtons) button.setAttribute('aria-pressed', String(mode === this.controlMode));
+    for (const { mode, button } of this.modeButtons) {
+      button.setAttribute('aria-pressed', String(mode === this.controlMode));
+      button.disabled = mode === 'return' && this.drawerPath.length < 2;
+      if (this.demo.drawerControl && mode === 'policy') button.disabled = this.controlMode === 'hold'
+        && this.simulation.binding('joint_q')[this.demo.drawerCoordinate] >= this.demo.drawerOpenPosition;
+    }
     this.gripButton.hidden = !manual || !gripper;
     this.gripLabel.textContent = `${this.franka.gripOpen ? 'Close' : 'Open'} gripper`;
     this.gripButton.setAttribute('aria-label', this.gripLabel.textContent);
@@ -716,7 +802,8 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.viewer.manualTarget = manual ? this.franka.target : null;
     if (this.boundaryNote) this.boundaryNote.textContent = manual
       ? 'Manual control · Keyboard or touch · Live contact physics' : this.demo.boundaryNote;
-    if (this.franka.description.modeBinding) this.simulation.binding(this.franka.description.modeBinding)[0] = Number(manual);
+    if (this.franka.description.modeBinding) this.simulation.binding(this.franka.description.modeBinding)[0]
+      = Number(manual || this.demo.drawerControl && this.controlMode !== 'policy');
   }
 
   setupJointPdControls(panel) {
@@ -795,7 +882,15 @@ class IsaacLabBrowserDemo extends HTMLElement {
     this.resetSticks?.();
     this.tick = 0;
     this.elapsed = 0;
-    if (this.franka) { this.settleFranka(); this.updateFrankaControls(); }
+    if (this.franka) {
+      this.settleFranka();
+      if (this.demo.drawerControl) {
+        this.resetDrawerControl();
+        if (this.running) this.querySelector('.browser-demo-pause').click();
+        this.status.textContent = 'Choose Open to start';
+      }
+      this.updateFrankaControls();
+    }
     if (this.demo.kind === 'joint_pd') {
       this.plot.reset();
       this.updateJointPdTarget();
@@ -1015,7 +1110,9 @@ class IsaacLabBrowserDemo extends HTMLElement {
   }
 
   applyController() {
-    if (this.franka && this.controlMode === 'manual') this.franka.step(this.viewer.camera, this.simulation.manifest.timestep);
+    if (this.demo.drawerControl && this.controlMode === 'return') this.stepDrawerReturn();
+    else if (this.demo.drawerControl && this.controlMode === 'hold') return;
+    else if (this.franka && this.controlMode === 'manual') this.franka.step(this.viewer.camera, this.simulation.manifest.timestep);
     else if (this.policy && this.tick % this.demo.decimation === 0) {
       this.demo.kind === 'cartpole' ? this.applyCartpolePolicy() : this.applyPolicy();
     }
@@ -1122,10 +1219,12 @@ class IsaacLabBrowserDemo extends HTMLElement {
         this.elapsed = Math.min(this.elapsed + Math.min((time - this.previousTime) / 1000, frameTimeLimit), maxSteps * timestep);
         const steps = Math.min(maxSteps, Math.floor(this.elapsed / timestep));
         for (let index = 0; index < steps; index += 1) {
-          const result = await policy.evaluate(simulation);
+          const manual = this.franka && this.controlMode === 'manual';
+          const result = manual ? null : await policy.evaluate(simulation);
           if (epoch !== this.policyEpoch || generation !== this.generation || !this.isConnected
               || !this.visible || document.hidden || !this.running) return;
-          policy.apply(result, simulation);
+          if (manual) this.franka.step(this.viewer.camera, timestep);
+          else policy.apply(result, simulation);
           simulation.step();
           this.tick += 1;
           this.elapsed -= timestep;
@@ -1171,6 +1270,10 @@ class IsaacLabBrowserDemo extends HTMLElement {
           if (this.demo.kind === 'joint_pd') this.updateJointPdTarget();
           this.simulation.step();
           this.tick += 1;
+          if (this.demo.drawerControl) {
+            this.sampleDrawer();
+            if (!this.running) { this.elapsed = 0; resetDuringFrame = true; break; }
+          }
           if (this.demo.kind === 'pulley') this.viewer.sample(this.tick * this.simulation.manifest.timestep);
           if (this.demo.kind === 'joint_pd') {
             this.plot.add(this.tick * this.simulation.manifest.timestep,

@@ -94,8 +94,8 @@ export class RobotViewer {
     key.shadow.camera.bottom = -shadowExtent;
     key.shadow.camera.near = 0.1;
     key.shadow.camera.far = 12;
-    key.shadow.bias = workbench ? 0.0001 : microduck ? -0.000005 : -0.0001;
-    key.shadow.normalBias = workbench ? 0.005 : microduck ? 0.0003 : 0;
+    key.shadow.bias = this.demo.shadowBias ?? (workbench ? 0.0001 : microduck ? -0.000005 : -0.0001);
+    key.shadow.normalBias = this.demo.shadowNormalBias ?? (workbench ? 0.005 : microduck ? 0.0003 : 0);
     this.key = key;
     this.scene.add(key);
     this.scene.add(key.target);

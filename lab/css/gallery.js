@@ -6,6 +6,12 @@
 import { demos, activities, physics } from '../demos.js';
 
 const params = new URLSearchParams(location.search);
+// Preserve documentation links when a robot replaces a gallery entry.
+const resolveDemo = (id) => demos.find((demo) => demo.aliases?.includes(id))?.id || id;
+if (params.has('demo')) params.set('demo', resolveDemo(params.get('demo')));
+if (params.has('demos') && params.get('demos') !== 'all') {
+  params.set('demos', params.get('demos').split(',').map((id) => resolveDemo(id.trim())).join(','));
+}
 const embedded = params.get('embed') === '1';
 const contextual = embedded && params.has('demos') && params.get('demos') !== 'all';
 const content = document.querySelector('#content');
@@ -321,6 +327,7 @@ function showGallery(pool) {
   window.addEventListener('popstate', () => { filters = readFilters(); updateGallery(); });
 
   highlightDemo = (id, scroll = false) => {
+    id = resolveDemo(id);
     const selected = cards.find(({ item }) => item.id === id);
     if (!selected) return;
     if (activeDemo && activeDemo !== id) closePlayer();

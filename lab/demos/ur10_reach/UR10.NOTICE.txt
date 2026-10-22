@@ -1,0 +1,18 @@
+Universal Robots UR10 visual geometry and robot-description reference
+
+Native source: Isaac Lab's Isaac 6.2 asset collection:
+https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/IsaacLab/Robots/UniversalRobots/UR10/ur10_instanceable.usd
+
+Isaac Lab's Universal Robots asset configuration references the ROS-Industrial
+universal_robot project. The ur_description package declares the BSD license;
+its upstream license is reproduced verbatim in UR10.LICENSE.txt.
+https://github.com/ros-industrial/universal_robot/blob/39ad110d8f2e8f66856a201cca88aa7a7025e3eb/ur_description/package.xml
+https://github.com/ros-industrial/universal_robot/blob/39ad110d8f2e8f66856a201cca88aa7a7025e3eb/ur_description/LICENSE
+
+Browser modifications: triangulated native USD visual meshes while retaining
+their original CAD faces, authored normals and material colors, transformed
+vertices into native body frames, and packed float32 positions / normals and
+uint32 robot-mesh indices into visuals.bin.
+
+Source USD SHA-256:
+a8bd0e6362f02c0d992ff83748d0232a404b36d0f202c2268784bda34f2da9e2
