@@ -2,14 +2,14 @@
   "demos": [
     {
       "id": "alphanist",
-      "title": "AlphaNIST assembly policy",
+      "title": "AlphaNIST simple insertions",
       "group": "Manipulation",
       "activity": "policy",
       "physics": [
         "rigid"
       ],
       "policyRuntime": "onnx",
-      "description": "Run the full ten-part NIST assembly policy. Drag any part to perturb its approach and watch it continue."
+      "description": "A pretrained policy inserts one round and two rectangular pegs. Drag a part to perturb its approach."
     },
     {
       "id": "pulley",

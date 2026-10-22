@@ -12,19 +12,19 @@ CPU WebAssembly, policies run in the browser, and Three.js renders the scenes.
 
 [Open the gallery](https://maxkra15.github.io/isaaclab-browser-demos/lab/) ·
 [Try the pulley workshop](https://maxkra15.github.io/isaaclab-browser-demos/lab/?demo=pulley&rope=newton&wheels=4)
-· [Try AlphaNIST assembly](https://maxkra15.github.io/isaaclab-browser-demos/lab/?demo=alphanist)
+· [Try AlphaNIST insertions](https://maxkra15.github.io/isaaclab-browser-demos/lab/?demo=alphanist)
 
 The gallery includes tuning, policy inference, and scripted manipulation. Its
 pulley workshop compares massless ropes, VBD cables, and native Newton tendons.
 All three use 200 g wheels and the same ideal static force reference.
 Only the selected simulation loads. Pause, reset, and scene controls stay in the viewer.
 
-AlphaNIST uses the published pretrained actor, including its attention encoder
-and history inputs, through ONNX Runtime. All ten parts start loose and dynamic,
-as in the native scene. Drag any part to apply a physical perturbation;
-drag the background to orbit. CPU contacts retain the original
-concave triangle meshes instead of the native GPU texture SDFs. The full scene
-is CPU intensive, and insertions can stall compared with the original GPU task.
+AlphaNIST uses the published pretrained actor through ONNX Runtime for three
+simple insertions: one round and two rectangular pegs. All three start loose,
+dynamic, and draggable. Small convex peg colliders preserve the native tip
+chamfers; compound socket walls retain the measured clearances. The native
+completion criteria remain. Drag a part to perturb the policy, or the background
+to orbit. The full ten-part benchmark remains in native Isaac Lab.
 
 ![Pulley workshop](lab/demos/pulley/preview.jpg)
 
