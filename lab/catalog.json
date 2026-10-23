@@ -219,17 +219,6 @@
       "manualControl": "./demos/franka_lift/manual-control.json"
     },
     {
-      "id": "franka_drawer",
-      "title": "Franka drawer control",
-      "group": "Manipulation",
-      "description": "Open with a pretrained policy, close with a physical return controller, or take over with keyboard IK. The lower drawer and doors stay fixed.",
-      "activity": "policy",
-      "physics": [
-        "rigid"
-      ],
-      "manualControl": "./demos/franka_drawer/manual-control.json"
-    },
-    {
       "id": "microduck",
       "title": "MicroDuck walking",
       "group": "Policy control",
